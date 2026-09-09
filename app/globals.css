@@ -46,3 +46,25 @@ h6 {
   background: var(--primary);
   color: var(--background);
 }
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+#hero-section * ::selection , #how-it-works * ::selection {
+  background: #09090b;
+  color: #16a34a;
+}

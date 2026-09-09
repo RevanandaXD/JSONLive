@@ -1,17 +1,13 @@
 "use client";
 
+import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import type { Resource } from "@/types/resource";
 
 export default function useResource() {
     const result = useQuery({
         queryKey: ['resources'],
-        queryFn: async () => {
-            const res = await fetch('/api/resources');
-
-            if (!res.ok) throw new Error("Failed to fetch resources");
-            
-            return res.json()
-        }
+        queryFn: () => api.get<Resource[]>('/api/resources')
     })
 
     return{

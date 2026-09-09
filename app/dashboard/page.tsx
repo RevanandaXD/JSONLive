@@ -15,50 +15,13 @@ import {
   HiOutlineClock,
 } from "react-icons/hi2";
 import { HiCheck } from "react-icons/hi";
-import { DashboardHeader } from "@/components/ui/dashboard-header";
+import { DashboardNav } from "@/components/ui/DashboardNav";
 
-type Resource = {
-  id: string;
-  name: string;
-  slug: string;
-  username: string;
-  size: string;
-  updatedAt: string;
-  type: "object" | "collection";
-};
-
-const initialResources: Resource[] = [
-  {
-    id: "1",
-    name: "Users",
-    slug: "users",
-    username: "revan",
-    size: "2.1 KB",
-    updatedAt: "2 hours ago",
-    type: "collection",
-  },
-  {
-    id: "2",
-    name: "Profile",
-    slug: "profile",
-    username: "revan",
-    size: "480 B",
-    updatedAt: "1 day ago",
-    type: "object",
-  },
-  {
-    id: "3",
-    name: "Products",
-    slug: "products",
-    username: "revan",
-    size: "5.8 KB",
-    updatedAt: "3 days ago",
-    type: "collection",
-  },
-];
+import useResource from "@/hooks/useResource";
+import type { Resource } from "@/types/resource";
 
 const endpoint = (r: Resource) =>
-  `https://jsonlive.example/${r.username}/${r.slug}`;
+  `https://jsonlive.example/${r.slug}`;
 
 const stats = [
   { label: "Total Resources", value: "6", icon: HiOutlineCube },
@@ -67,9 +30,33 @@ const stats = [
 ];
 
 export default function DashboardPage() {
-  const [resources, setResources] = useState(initialResources);
+  const { data: resources = [], isPending, isError } = useResource();
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  if (isPending) {
+    return (
+      <div className="min-h-screen">
+        <DashboardNav />
+        <main className="mx-auto max-w-6xl px-6 py-10">
+          <p className="text-sm text-muted-foreground">Loading resources...</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return(
+      <div className="min-h-screen">
+        <DashboardNav />
+        <main className="mx-auto max-w-6xl px-6 py-10">
+          <p className="text-sm text-red-500">
+            Failed to load resource. Please try again
+          </p>
+        </main>
+      </div>
+    )
+  }
 
   const filtered = resources.filter(
     (r) =>
@@ -88,18 +75,17 @@ export default function DashboardPage() {
   };
 
   const handleDelete = (id: string) => {
-    setResources((prev) => prev.filter((r) => r.id !== id));
+    console.log('delete', id)
   };
 
   return (
     <div className="min-h-screen">
-      <DashboardHeader />
+      <DashboardNav />
 
       <main className="mx-auto max-w-6xl px-6 py-10">
-        
         <div className="mb-7.5 flex justify-start gap-2">
-            <h1 className="text-3xl font-medium">Welcome Home</h1>
-            <span className="inline-block text-3xl font-bold">User...</span>
+          <h1 className="text-3xl font-medium">Welcome Home</h1>
+          <span className="inline-block text-3xl font-bold">User...</span>
         </div>
 
         {/* Heading */}
@@ -226,7 +212,7 @@ export default function DashboardPage() {
                   rel="noopener noreferrer"
                   className="mb-4 truncate rounded-lg border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  /{r.username}/{r.slug}
+                  {r.slug}
                 </a>
 
                 {/* Meta */}

@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import {
-  HiOutlineArrowLeft,
-  HiOutlineClipboard,
-  HiOutlineDocumentPlus,
-  HiOutlineSparkles,
-} from "react-icons/hi2";
+import { HiOutlineArrowLeft, HiOutlineClipboard, HiOutlineSparkles } from "react-icons/hi2";
 import { HiCheck, HiX } from "react-icons/hi";
-import { DashboardHeader } from "@/components/ui/dashboard-header";
+import { DashboardNav } from "@/components/ui/DashboardNav";
+import { FormatJSON } from "./format";
+import { useRouter } from "next/router";
+import { useCreateResources } from "@/hooks/useCreateResource";
 
 type EditorStatus = "valid" | "invalid" | "empty";
 
@@ -30,10 +28,14 @@ function parseJson(value: string): { ok: boolean; error?: string } {
   }
 }
 
+
 export default function CreateResourcePage() {
   const [name, setName] = useState("");
   const [data, setData] = useState("");
   const [touched, setTouched] = useState(false);
+
+  const router = useRouter();
+  const { createResource, isPending, isError } = useCreateResources();
 
   const parsed = parseJson(data);
   const valid = parsed.ok && data.trim().length > 0;
@@ -69,6 +71,15 @@ export default function CreateResourcePage() {
     }
   };
 
+  const handleSubmit = () => {
+    if (!valid) return;
+
+    createResource({
+      name: name.trim(),
+      data: JSON.parse(data),
+    });
+  }
+
   const slug = name
     .toLowerCase()
     .trim()
@@ -77,17 +88,14 @@ export default function CreateResourcePage() {
 
   return (
     <div className="min-h-screen">
-      <DashboardHeader />
+      <DashboardNav />
 
       <main className="mx-auto max-w-5xl px-6 py-10">
         {/* Heading */}
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <HiOutlineDocumentPlus className="h-6 w-6" />
-            </div>
             <div>
-              <h1 className="font-heading text-2xl font-bold tracking-tight">
+              <h1 className="font-heading text-2xl font-bold tracking-tight mb-0.5">
                 Create Resource
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -172,19 +180,14 @@ export default function CreateResourcePage() {
               )}
             </div>
 
-            <textarea
+            <FormatJSON
               value={data}
-              onChange={(e) => {
-                setData(e.target.value);
+              onChange={(v) => {
+                setData(v);
                 setTouched(true);
               }}
               placeholder={placeholder}
-              spellCheck={false}
-              className={`h-96 w-full resize-none bg-transparent p-5 font-mono text-sm leading-relaxed outline-none placeholder:text-muted-foreground/40 ${
-                status === "invalid"
-                  ? "text-red-300"
-                  : "text-foreground"
-              }`}
+              invalid={status === "invalid"}
             />
 
             <div className="flex items-center justify-between border-t border-border/60 px-4 py-3">

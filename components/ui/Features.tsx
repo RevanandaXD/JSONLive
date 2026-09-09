@@ -1,20 +1,20 @@
+"use client";
+
+import { motion } from "motion/react";
+import type { Variants } from "motion/react";
 import {
   HiOutlineBolt,
   HiOutlineGlobeAlt,
-  HiOutlineRocketLaunch,
   HiOutlineCheckCircle,
   HiOutlineCog6Tooth,
 } from "react-icons/hi2";
-import { FiFeather } from "react-icons/fi";
+import { FaBookReader  } from "react-icons/fa";
 import { IconType } from "react-icons";
-import type { ReactNode } from "react";
 
 type Feature = {
   title: string;
   description: string;
   icon: IconType;
-  className?: string;
-  content?: ReactNode;
 };
 
 const features: Feature[] = [
@@ -23,17 +23,6 @@ const features: Feature[] = [
     description:
       "Paste your JSON and get a working API endpoint in seconds. No server configuration needed.",
     icon: HiOutlineBolt,
-    className: "lg:col-span-2",
-    content: (
-      <div className="mt-4 rounded-lg border border-border/60 bg-background/60 p-3 font-mono text-xs leading-relaxed">
-        <span className="text-primary">POST</span>{" "}
-        <span className="text-muted-foreground">/api/resources</span>
-        {"\n"}
-        <span className="text-green-400">201 Created</span>
-        {" · "}
-        <span className="text-amber-300">/revan/profile</span>
-      </div>
-    ),
   },
   {
     title: "JSON Validation",
@@ -43,61 +32,89 @@ const features: Feature[] = [
   {
     title: "Public Endpoint",
     description:
-      "Your API is accessible from anywhere — localhost, Vercel, mobile apps, or CI/CD pipelines.",
+      "Accessible from anywhere — localhost, Vercel, mobile apps, or CI/CD pipelines.",
     icon: HiOutlineGlobeAlt,
   },
   {
     title: "No Backend Required",
     description:
-      "Build and test your frontend without waiting for a backend. Mock APIs that just work.",
-    icon: HiOutlineRocketLaunch,
+      "Build and test your frontend without waiting for a backend.",
+    icon: HiOutlineCog6Tooth,
   },
   {
-    title: "Lightweight",
+    title: "Great For Learning",
     description:
-      "Designed to run efficiently on minimal hardware. No heavy dependencies required.",
-    icon: FiFeather,
+      "Designed to help people learning about rest API",
+    icon: FaBookReader,
   },
   {
     title: "Edit & Update",
     description:
       "Update your JSON anytime. The endpoint always serves the latest version.",
-    icon: HiOutlineCog6Tooth,
+    icon: HiOutlineBolt,
   },
 ];
 
-const cardBase =
-  "group flex flex-col rounded-xl border border-border/70 bg-card/60 p-6 transition-all duration-300 hover:border-primary/25 hover:bg-card";
+const container: Variants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const item: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+};
 
 export const Features = () => {
   return (
     <section id="features" className="py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-6">
         {/* Section heading */}
-        <div className="mb-14 text-center sm:mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="mb-14 max-w-2xl sm:mb-16"
+        >
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary">
             Features
           </p>
-          <h2 className="mb-4 font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mb-4 font-heading text-3xl font-medium tracking-tight sm:text-4xl">
             Everything you need
           </h2>
-          <p className="mx-auto max-w-lg text-sm text-muted-foreground sm:text-base leading-relaxed">
+          <p className="text-sm text-muted-foreground sm:text-base leading-relaxed">
             JSONLive is built for developers who need a quick, reliable way to
             turn JSON data into accessible API endpoints.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Bento grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+        {/* Grid */}
+        <motion.div
+          variants={container}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
+        >
           {features.map((feature) => {
             const Icon = feature.icon;
 
             return (
-              <div
+              <motion.div
                 key={feature.title}
-                className={`${cardBase} ${feature.className ?? ""}`}
+                variants={item}
+                className="flex flex-col rounded-xl border border-border/70 bg-card/60 p-6 transition ease-in duration-100 hover:border-primary"
               >
-                <div className="mb-4 inline-flex items-center justify-center rounded-lg bg-primary/10 p-2.5 text-primary transition-colors duration-300 group-hover:bg-primary/15 w-fit">
+                <div className="mb-4 w-fit rounded-lg bg-primary/10 p-2.5 text-primary">
                   <Icon className="h-5 w-5" />
                 </div>
                 <h3 className="mb-2 font-heading text-base font-semibold">
@@ -106,11 +123,10 @@ export const Features = () => {
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {feature.description}
                 </p>
-                {feature.content}
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
