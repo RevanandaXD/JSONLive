@@ -73,7 +73,7 @@ export const Footer = () => {
             </p>
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors duration-200 hover:text-primary-hover w-fit"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors duration-200 hover:text-primary-hover w-fit relative after:content-[''] after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-current after:transition-all hover:after:w-full"
             >
               Start now
               <FiArrowUpRight className="w-3.5 h-3.5" />

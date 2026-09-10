@@ -7,31 +7,53 @@ on:
     branches: [main]
 
 jobs:
-  ci: 
+  ci:
     runs-on: ubuntu-latest
 
-  steps:
-    - name: checkout
-      uses: actions/checkout@4
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: admin
+          POSTGRES_DB: jsonlive
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-    - name: setup-pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 10.33.2
-    
-    - name: setup-node
-      uses: actions/setup-node@4
-      with:
-        node-version: 22
-        cache: pnpm
+    env:
+      DATABASE_URL: postgresql://postgres:admin@localhost:5432/jsonlive
 
-    - name: install depedencies
-      run: pnpm install --frozen-lockfile
-    
-    - name: lint
-      run: pnpm lint
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
 
-    - name: build
-      run: pnpm run build
-      env:
-        DATABASE_URL: postgresql://postgres:admin@localhost:5432/jsonlive
+      - name: setup-pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: generate prisma client
+        run: pnpm prisma generate
+
+      - name: run migrations
+        run: pnpm prisma migrate deploy
+
+      - name: lint
+        run: pnpm lint
+
+      - name: build
+        run: pnpm run build
