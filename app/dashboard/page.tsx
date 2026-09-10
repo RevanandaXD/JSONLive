@@ -16,12 +16,14 @@ import {
 } from "react-icons/hi2";
 import { HiCheck } from "react-icons/hi";
 import { DashboardNav } from "@/components/ui/DashboardNav";
+import { api } from "@/src/lib/api";
 
 import useResource from "@/hooks/useResource";
 import type { Resource } from "@/types/resource";
+import { DEFAULT_USERNAME, PUBLIC_BASE_URL } from "@/src/lib/config";
 
 const endpoint = (r: Resource) =>
-  `https://jsonlive.example/${r.slug}`;
+  `${PUBLIC_BASE_URL}/${DEFAULT_USERNAME}/${r.slug}`;
 
 const stats = [
   { label: "Total Resources", value: "6", icon: HiOutlineCube },
@@ -30,7 +32,7 @@ const stats = [
 ];
 
 export default function DashboardPage() {
-  const { data: resources = [], isPending, isError } = useResource();
+  const { data: resources = [], isPending, isError, refetch } = useResource();
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -74,8 +76,13 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    console.log('delete', id)
+  const handleDelete = async (id: string) => {
+    try {
+      await api.delete(`/api/resources/${id}`);
+      refetch();
+    } catch {
+      console.error('failed to delete')
+    }
   };
 
   return (

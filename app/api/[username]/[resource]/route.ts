@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import prisma from "@/src/lib/prisma";
 
 type DbParams = {
   username: string;
@@ -11,37 +12,32 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-const mockStore: Record<string, Record<string, unknown>> = {
-  revan: {
-    users: [
-      { id: 1, name: "Revan" },
-      { id: 2, name: "Budi" },
-    ],
-    profile: {
-      name: "Revan",
-      role: "Developer",
-      skills: ["React", "Next.js"],
-    },
-  },
-};
-
 export async function GET(
   _request: Request,
   { params }: { params: Promise<DbParams> },
 ) {
   const { username, resource } = await params;
 
-  const userData = mockStore[username];
-  const data = userData?.[resource];
-
-  if (data === undefined) {
+  const user = await prisma.user.findUnique({ where: { username } });
+  if (!user) {
     return NextResponse.json(
       { error: "Resource not found" },
       { status: 404, headers: corsHeaders },
     );
   }
 
-  return NextResponse.json(data, { headers: corsHeaders });
+  const found = await prisma.resource.findFirst({
+    where: { userId: user.id, slug: resource },
+  });
+
+  if (!found) {
+    return NextResponse.json(
+      { error: "Resource not found" },
+      { status: 404, headers: corsHeaders },
+    );
+  }
+
+  return NextResponse.json(found.data, { headers: corsHeaders });
 }
 
 export async function OPTIONS() {

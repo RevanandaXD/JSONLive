@@ -6,8 +6,9 @@ import { HiOutlineArrowLeft, HiOutlineClipboard, HiOutlineSparkles } from "react
 import { HiCheck, HiX } from "react-icons/hi";
 import { DashboardNav } from "@/components/ui/DashboardNav";
 import { FormatJSON } from "./format";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useCreateResources } from "@/hooks/useCreateResource";
+import { DEFAULT_USERNAME } from "@/src/lib/config";
 
 type EditorStatus = "valid" | "invalid" | "empty";
 
@@ -71,13 +72,18 @@ export default function CreateResourcePage() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!valid) return;
 
-    createResource({
-      name: name.trim(),
-      data: JSON.parse(data),
-    });
+    try {
+      await createResource({
+        name: name.trim(),
+        data: JSON.parse(data),
+      });
+      router.push("/dashboard");
+    } catch {
+      /* create failed */
+    }
   }
 
   const slug = name
@@ -132,7 +138,7 @@ export default function CreateResourcePage() {
                 />
                 {slug && (
                   <p className="mt-2 truncate rounded-lg border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground">
-                    /api/revan/{slug}
+                    /{DEFAULT_USERNAME}/{slug}
                   </p>
                 )}
               </div>
@@ -178,6 +184,12 @@ export default function CreateResourcePage() {
                   Valid JSON
                 </span>
               )}
+              {isError && (
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-red-400">
+                  <HiX className="h-4 w-4" />
+                  Failed to create
+                </span>
+              )}
             </div>
 
             <FormatJSON
@@ -195,10 +207,11 @@ export default function CreateResourcePage() {
                 {data ? new Blob([data]).size.toLocaleString() : 0} bytes
               </span>
               <button
-                disabled={!valid}
+                disabled={!valid || isPending}
+                onClick={handleSubmit}
                 className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-bold text-background transition-all duration-200 enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Create Resource
+                {isPending ? "Creating..." : "Create Resource"}
               </button>
             </div>
           </div>

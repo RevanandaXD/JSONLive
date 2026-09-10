@@ -44,7 +44,7 @@ export const Navbar = () => {
               href="/dashboard"
               className="ml-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-background hover:bg-primary-hover"
             >
-              Open Dashboard
+              Login
             </Link>
           </div>
 

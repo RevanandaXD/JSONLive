@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
 import { UserCard } from "./UserCard";
 import { UseUIStore } from "@/stores/ui-store";

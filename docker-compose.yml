@@ -1,0 +1,23 @@
+services:
+  jsonlive:
+    build: .
+    ports:
+      - "4500:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:admin@postgres:5432/jsonlive
+    depends_on:
+      - postgres
+    restart: unless-stopped
+  
+  postgres:
+    image: postgres:17-alpine
+    environment: 
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: jsonlive
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
