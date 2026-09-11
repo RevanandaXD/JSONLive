@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/prisma";
+import { auth } from "@/src/lib/auth";
+import { headers } from "next/headers";
 
 export async function GET() {
   try {
+
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+
+    if (!session) {
+      return NextResponse.json({error: "Unauthorized"}, { status: 401 })
+    }
+
     const response = await prisma.resource.findMany({
-      where: { userId: 'test' },
+      where: { userId: session.user.id },
       orderBy: { createdAt: "desc" }
     })
 
@@ -26,6 +37,16 @@ export async function POST(request: Request) {
   const MAX_RESOURCE_USER = 5;
 
   try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    })
+
+    if (!session) {
+      return NextResponse.json({error: "Unauthorized"}, { status: 401 })
+    }
+
+    const userId = session.user.id
+
     const { name, data } = await request.json();
 
     if (!name || !data) {
@@ -42,16 +63,15 @@ export async function POST(request: Request) {
         error: "JSON size exceeds 1MB limit"
       })
     }
-    
-    const userId = "default-user-id";
 
     const count = await prisma.resource.count({
       where: { userId }
     });
+
     if (count >= MAX_RESOURCE_USER) {
       return NextResponse.json({
         status: 400,
-        error: "Resource limit reached (max 20)"
+        error: "Resource limit reached (max 5)"
       })
     }
     const slug = name

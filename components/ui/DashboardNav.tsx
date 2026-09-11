@@ -75,13 +75,6 @@ export const DashboardNav = () => {
                 {link.name}
               </Link>
             ))}
-            <Link
-              href="/dashboard/new"
-              onClick={() => closeSidebar()}
-              className="mt-2 rounded-lg bg-primary px-3.5 py-2.5 text-center text-sm font-bold text-background"
-            >
-              New Resource
-            </Link>
           </div>
         </div>
       )}

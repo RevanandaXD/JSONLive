@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/prisma";
+import { auth } from "@/src/lib/auth";
+import { headers } from "next/headers";
 
 type DbParams = {
   id: string;
@@ -10,6 +12,14 @@ export async function PUT(
   { params }: { params: Promise<DbParams> },
 ) {
   try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
     const { name, data } = await request.json();
 
@@ -19,6 +29,13 @@ export async function PUT(
         { status: 404, error: "Resource Not Found" },
         { status: 404 },
       );
+
+    if (response.userId !== session.user.id) {
+      return NextResponse.json(
+        { status: 403, error: "Forbidden: You do not own this resource" },
+        { status: 403 },
+      );
+    }
 
     const slug = name
       .toLowerCase()
@@ -44,6 +61,14 @@ export async function DELETE(
   { params }: { params: Promise<DbParams> },
 ) {
   try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
 
     const response = await prisma.resource.findUnique({
@@ -55,6 +80,13 @@ export async function DELETE(
         { status: 404, error: "Resource Not Found" },
         { status: 404 },
       );
+
+    if (response.userId !== session.user.id) {
+      return NextResponse.json(
+        { status: 403, error: "Forbidden: You do not own this resource" },
+        { status: 403 },
+      );
+    }
 
     const deleted = await prisma.resource.delete({
       where: { id },

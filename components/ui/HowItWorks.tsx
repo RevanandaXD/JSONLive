@@ -43,7 +43,7 @@ const item: Variants = {
 
 export const HowItWorks = () => {
   return (
-    <section id="how-it-works" className="border-t border-border/50 pt-35">
+    <section id="how-it-works" className="scroll-mt-16 border-t border-border/50 py-20">
       <div className="grid grid-cols-1 md:grid-cols-2">
         {/* Left — green */}
         <div className="flex flex-col justify-center bg-primary px-6 py-16 sm:py-20 lg:px-16 lg:py-24">

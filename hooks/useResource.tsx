@@ -8,13 +8,17 @@ export default function useResource() {
   const result = useQuery({
     queryKey: ["resources"],
     queryFn: async () => {
-      const res = await api.get<{ status: number; data: Resource[] }>("/api/resources");
-      return res.data;
+      try {
+        const res = await api.get<{ status: number; data: Resource[] }>("/api/resources");
+        return res.data ?? [];
+      } catch {
+        return [];
+      }
     },
   });
 
   return {
-    data: result.data,
+    data: result.data ?? [],
     isPending: result.isPending,
     isError: result.isError,
     refetch: result.refetch,

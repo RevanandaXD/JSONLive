@@ -41,7 +41,7 @@ export const Navbar = () => {
               </a>
             ))}
             <Link
-              href="/dashboard"
+              href="/login"
               className="ml-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-background hover:bg-primary-hover"
             >
               Login
@@ -74,11 +74,11 @@ export const Navbar = () => {
                 </a>
               ))}
               <Link
-                href="/dashboard"
+                href="/login"
                 onClick={closeMenu}
                 className="mt-2 rounded-lg bg-primary px-3.5 py-2.5 text-center text-sm font-bold text-background"
               >
-                Open Dashboard
+                Login
               </Link>
             </div>
           </div>

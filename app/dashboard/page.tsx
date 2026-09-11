@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   HiOutlinePlus,
   HiOutlineArrowTopRightOnSquare,
@@ -19,30 +20,62 @@ import { DashboardNav } from "@/components/ui/DashboardNav";
 import { api } from "@/src/lib/api";
 
 import useResource from "@/hooks/useResource";
+import { useSession } from "@/src/lib/auth-client";
 import type { Resource } from "@/types/resource";
 import { DEFAULT_USERNAME, PUBLIC_BASE_URL } from "@/src/lib/config";
-
-const endpoint = (r: Resource) =>
-  `${PUBLIC_BASE_URL}/${DEFAULT_USERNAME}/${r.slug}`;
-
-const stats = [
-  { label: "Total Resources", value: "6", icon: HiOutlineCube },
-  { label: "Endpoints Live", value: "6", icon: HiOutlineServerStack },
-  { label: "Total Requests", value: "1.2k", icon: HiOutlineClock },
-];
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function DashboardPage() {
+
+  const router = useRouter();
+
+  const { data: sessionData, isPending: sessionPending } = useSession();
+  const user = sessionData?.user;
+  const username = user?.name || user?.email?.split("@")[0] || DEFAULT_USERNAME;
+
   const { data: resources = [], isPending, isError, refetch } = useResource();
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // middleware
+  if (!user && !sessionPending) {
+    router.push('/login');
+    return null;
+  }
+
+  // Dynamic stats calculation
+  const totalResources = resources.length;
+  const liveEndpoints = resources.length;
+
+  const totalBytes = resources.reduce((acc, r) => {
+    try {
+      return acc + new TextEncoder().encode(JSON.stringify(r.data)).length;
+    } catch {
+      return acc;
+    }
+  }, 0);
+
+  const formattedSize =
+    totalBytes >= 1024 * 1024
+      ? `${(totalBytes / (1024 * 1024)).toFixed(1)} MB`
+      : totalBytes >= 1024
+      ? `${(totalBytes / 1024).toFixed(1)} KB`
+      : `${totalBytes} B`;
+
+  const stats = [
+    { label: "Total Resources", value: totalResources.toString(), icon: HiOutlineCube },
+    { label: "Endpoints Live", value: liveEndpoints.toString(), icon: HiOutlineServerStack },
+    { label: "Total Storage", value: formattedSize, icon: HiOutlineClock },
+  ];
+
+  const getEndpoint = (r: Resource) =>
+    `${PUBLIC_BASE_URL}/${username}/${r.slug}`;
 
   if (isPending) {
     return (
       <div className="min-h-screen">
         <DashboardNav />
-        <main className="mx-auto max-w-6xl px-6 py-10">
-          <p className="text-sm text-muted-foreground">Loading resources...</p>
-        </main>
+        <Skeleton />
       </div>
     );
   }
@@ -68,7 +101,7 @@ export default function DashboardPage() {
 
   const handleCopy = async (r: Resource) => {
     try {
-      await navigator.clipboard.writeText(endpoint(r));
+      await navigator.clipboard.writeText(getEndpoint(r));
       setCopiedId(r.id);
       setTimeout(() => setCopiedId(null), 1500);
     } catch {
@@ -90,17 +123,19 @@ export default function DashboardPage() {
       <DashboardNav />
 
       <main className="mx-auto max-w-6xl px-6 py-10">
-        <div className="mb-7.5 flex justify-start gap-2">
-          <h1 className="text-3xl font-medium">Welcome Home</h1>
-          <span className="inline-block text-3xl font-bold">User...</span>
+        <div className="mb-6 flex items-center gap-2">
+          <h1 className="text-2xl font-medium sm:text-3xl">Welcome back,</h1>
+          <span className="text-2xl font-bold text-primary sm:text-3xl">
+            {user?.name || user?.email?.split("@")[0] || "Developer"}
+          </span>
         </div>
 
         {/* Heading */}
         <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">
+            <h2 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               My Resources
-            </h1>
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Manage your JSON endpoints
             </p>
@@ -214,7 +249,7 @@ export default function DashboardPage() {
 
                 {/* Endpoint */}
                 <a
-                  href={endpoint(r)}
+                  href={getEndpoint(r)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mb-4 truncate rounded-lg border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -250,7 +285,7 @@ export default function DashboardPage() {
                     )}
                   </button>
                   <Link
-                    href={endpoint(r)}
+                    href={getEndpoint(r)}
                     target="_blank"
                     aria-label={`Open ${r.name}`}
                     className="inline-flex items-center justify-center rounded-lg border border-border px-3 py-2 text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground"

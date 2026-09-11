@@ -8,6 +8,7 @@ import { DashboardNav } from "@/components/ui/DashboardNav";
 import { FormatJSON } from "./format";
 import { useRouter } from "next/navigation";
 import { useCreateResources } from "@/hooks/useCreateResource";
+import { useSession } from "@/src/lib/auth-client";
 import { DEFAULT_USERNAME } from "@/src/lib/config";
 
 type EditorStatus = "valid" | "invalid" | "empty";
@@ -36,7 +37,14 @@ export default function CreateResourcePage() {
   const [touched, setTouched] = useState(false);
 
   const router = useRouter();
+  const { data: sessionData, isPending: sessionPending } = useSession();
+  const user = sessionData?.user;
   const { createResource, isPending, isError } = useCreateResources();
+
+  if (!user && !sessionPending) {
+    router.push("/login");
+    return null;
+  }
 
   const parsed = parseJson(data);
   const valid = parsed.ok && data.trim().length > 0;
@@ -81,8 +89,12 @@ export default function CreateResourcePage() {
         data: JSON.parse(data),
       });
       router.push("/dashboard");
-    } catch {
-      /* create failed */
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      const message = (err as { message?: string })?.message;
+      if (status === 401 || message?.includes("401")) {
+        router.push("/login");
+      }
     }
   }
 
