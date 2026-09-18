@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/src/lib/prisma";
 import { auth } from "@/src/lib/auth";
 import { headers } from "next/headers";
+import { LIMITS } from "@/src/lib/config";
 
 export async function GET() {
   try {
@@ -33,9 +34,6 @@ export async function GET() {
 
 export async function POST(request: Request) {
 
-  const MAX_JSON_SIZE = 1 * 1024 * 1024;
-  const MAX_RESOURCE_USER = 5;
-
   try {
     const session = await auth.api.getSession({
       headers: await headers()
@@ -47,7 +45,7 @@ export async function POST(request: Request) {
 
     const userId = session.user.id
 
-    const { name, data } = await request.json();
+    const { name, data, published } = await request.json();
 
     if (!name || !data) {
       return NextResponse.json({
@@ -57,7 +55,7 @@ export async function POST(request: Request) {
     }
 
     const bodySize = new TextEncoder().encode(JSON.stringify(data)).length;
-    if (bodySize > MAX_JSON_SIZE) {
+    if (bodySize > LIMITS.MAX_JSON_SIZE) {
       return NextResponse.json({
         status: 400,
         error: "JSON size exceeds 1MB limit"
@@ -68,10 +66,10 @@ export async function POST(request: Request) {
       where: { userId }
     });
 
-    if (count >= MAX_RESOURCE_USER) {
+    if (count >= LIMITS.MAX_RESOURCES) {
       return NextResponse.json({
         status: 400,
-        error: "Resource limit reached (max 5)"
+        error: `Resource limit reached (max ${LIMITS.MAX_RESOURCES})`
       })
     }
     const slug = name
@@ -96,6 +94,7 @@ export async function POST(request: Request) {
         name,
         slug,
         data,
+        published: published ?? true,
       }
     })
 

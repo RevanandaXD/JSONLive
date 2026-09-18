@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import type { Variants } from "motion/react";
 import { FiArrowRight, FiZap } from "react-icons/fi";
+import useSession from "@/hooks/useSession";
 
 const container: Variants = {
   hidden: {},
@@ -24,6 +25,10 @@ const item: Variants = {
 };
 
 export const Hero = () => {
+
+  const { data: sessionData } = useSession();
+  const isLoggedIn = !!sessionData?.user
+
   return (
     <section className="bg-primary" id="hero-section">
       <motion.div
@@ -54,7 +59,7 @@ export const Hero = () => {
           {/* CTAs */}
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
-              href="/dashboard"
+              href={isLoggedIn ? "/dashboard" : "/public"}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-background px-7 py-3.5 text-sm font-bold text-primary"
             >
               Get Started

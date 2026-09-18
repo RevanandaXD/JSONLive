@@ -21,12 +21,12 @@ export default function DocsPage() {
     <div className="min-h-screen">
       <DashboardNav />
 
-      <main className="mx-auto max-w-4xl px-6 py-10">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="mb-8">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary">
             API Docs
           </p>
-          <h1 className="font-heading text-3xl font-medium tracking-tight">
+          <h1 className="font-heading text-3xl font-bold tracking-tight">
             Public API
           </h1>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">

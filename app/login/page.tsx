@@ -11,6 +11,7 @@ import {
   HiXMark,
 } from "react-icons/hi2";
 import { Background } from "@/components/background/Background";
+import { Logo } from "@/components/ui/Logo";
 import { signIn } from "@/src/lib/auth-client";
 import { FaGithub } from "react-icons/fa";
 
@@ -79,12 +80,7 @@ export default function LoginPage() {
             {/* Section Kosong / Brand Panel (Sebelah Kiri) */}
             <div className="relative hidden flex-col justify-between border-r border-border/60 bg-gradient-to-br from-primary/10 via-card to-background p-8 md:flex md:min-h-[560px]">
               {/* Logo di Kiri Atas */}
-              <div className="flex items-center gap-2 font-heading text-xl font-bold tracking-tight text-foreground">
-                <span className="inline-flex items-center justify-center rounded-md bg-primary px-1.5 py-0.5 font-mono text-xs font-black text-background">
-                  {"{ }"}
-                </span>
-                JSONLive
-              </div>
+              <Logo href="/" className="text-xl" />
 
               {/* Konten Tengah (Minimalis) */}
               <div className="my-auto py-8">
@@ -106,12 +102,7 @@ export default function LoginPage() {
             {/* Section Form (Sebelah Kanan) */}
             <div className="flex flex-col justify-center px-6 py-8 sm:px-8 md:min-h-[560px]">
               {/* Logo khusus tampilan Mobile (saat panel kiri tersembunyi) */}
-              <div className="mb-6 flex items-center gap-2 font-heading text-xl font-bold tracking-tight text-foreground md:hidden">
-                <span className="inline-flex items-center justify-center rounded-md bg-primary px-1.5 py-0.5 font-mono text-xs font-black text-background">
-                  {"{ }"}
-                </span>
-                JSONLive
-              </div>
+              <Logo href="/" className="mb-6 text-xl md:hidden" />
 
               <div className="mb-6">
                 <h1 className="font-heading text-xl font-bold text-foreground">
@@ -186,9 +177,13 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
-                  className="mt-1 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-background transition-all duration-200 hover:bg-primary-hover hover:shadow-[0_4px_24px_rgba(34,197,94,0.25)]"
+                  className="mt-1 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-background cursor-pointer"
                 >
                   Log in
+                </button>
+                <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-white rounded-md cursor-pointer transition ease-in duration-200 hover:bg-white hover:text-black">
+                  <FaGithub size={15} />
+                  <span className="text-sm font-medium">Github</span>
                 </button>
               </form>
 
@@ -203,9 +198,6 @@ export default function LoginPage() {
               </p>
 
               <div className="flex items-center mt-3.5">
-                <button className="p-1.5 border border-white rounded-md cursor-pointer transition ease-in duration-200 hover:bg-white hover:text-black">
-                  <FaGithub size={20} />
-                </button>
               </div>
             </div>
           </div>

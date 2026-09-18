@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const prisma = new PrismaClient({
@@ -25,7 +25,7 @@ const USERS = [
 
 const RESOURCES: Record<
   string,
-  { name: string; slug: string; data: unknown }[]
+  { name: string; slug: string; data: Prisma.InputJsonValue }[]
 > = {
   revan: [
     {
@@ -63,27 +63,32 @@ async function main() {
 
     const user = await prisma.user.upsert({
       where: { email: userData.email },
-      update: { name: userData.name, username: userData.username },
+      update: {
+        name: userData.name,
+        username: userData.username,
+        emailVerified: true,
+      },
       create: {
         email: userData.email,
         name: userData.name,
         emailVerified: true,
         username: userData.username,
-        accounts: {
-          create: {
-            accountId: userData.email,
-            providerId: "credential",
-            password: passwordHash,
-          },
-        },
       },
-      include: { accounts: true },
     });
 
-    if (user.accounts.length === 0) {
+    const existingAccount = await prisma.account.findFirst({
+      where: { userId: user.id, providerId: "credential" },
+    });
+
+    if (existingAccount) {
+      await prisma.account.update({
+        where: { id: existingAccount.id },
+        data: { accountId: user.id, password: passwordHash },
+      });
+    } else {
       await prisma.account.create({
         data: {
-          accountId: userData.email,
+          accountId: user.id,
           providerId: "credential",
           userId: user.id,
           password: passwordHash,
@@ -103,7 +108,11 @@ async function main() {
       if (existing) {
         await prisma.resource.update({
           where: { id: existing.id },
-          data: { data: resource.data, name: resource.name },
+          data: {
+            data: resource.data,
+            name: resource.name,
+            published: true,
+          },
         });
       } else {
         await prisma.resource.create({
@@ -112,6 +121,7 @@ async function main() {
             name: resource.name,
             slug: resource.slug,
             data: resource.data,
+            published: true,
           },
         });
       }

@@ -5,71 +5,89 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   HiOutlinePlus,
-  HiOutlineArrowTopRightOnSquare,
-  HiOutlineLink,
-  HiOutlinePencil,
-  HiOutlineTrash,
-  HiOutlineDocumentText,
   HiOutlineMagnifyingGlass,
-  HiOutlineServerStack,
-  HiOutlineCube,
-  HiOutlineClock,
+  HiOutlineDocumentText,
 } from "react-icons/hi2";
-import { HiCheck } from "react-icons/hi";
 import { DashboardNav } from "@/components/ui/DashboardNav";
+import { ResourceCard } from "@/components/ui/ResourceCard";
 import { api } from "@/src/lib/api";
-
 import useResource from "@/hooks/useResource";
 import { useSession } from "@/src/lib/auth-client";
 import type { Resource } from "@/types/resource";
-import { DEFAULT_USERNAME, PUBLIC_BASE_URL } from "@/src/lib/config";
+import {
+  DEFAULT_USERNAME,
+  LIMITS,
+  PUBLIC_BASE_URL,
+  STORAGE_LIMIT,
+} from "@/src/lib/config";
 import { Skeleton } from "@/components/ui/Skeleton";
 
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${bytes} B`;
+}
+
+function UsageBlock({
+  label,
+  hint,
+  used,
+  max,
+  usedText,
+  maxText,
+}: {
+  label: string;
+  hint?: string;
+  used: number;
+  max: number;
+  usedText: string;
+  maxText: string;
+}) {
+  const ratio = Math.min(1, used / max);
+  const pct = Math.round(ratio * 100);
+  const tone =
+    ratio >= 1 ? "bg-red-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-primary";
+
+  return (
+    <div className="rounded-xl border border-border/70 bg-card/60 p-4">
+      <div className="mb-2.5 flex items-baseline justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground">{label}</p>
+          {hint && (
+            <p className="truncate text-xs text-muted-foreground">{hint}</p>
+          )}
+        </div>
+        <p className="shrink-0 font-mono text-sm font-medium text-foreground">
+          <span className={ratio >= 1 ? "text-red-500" : ""}>{usedText}</span>
+          <span className="text-muted-foreground"> / {maxText}</span>
+        </p>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
+        <div
+          className={`h-full rounded-full transition-all ${tone}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
-
   const router = useRouter();
-
   const { data: sessionData, isPending: sessionPending } = useSession();
   const user = sessionData?.user;
-  const username = user?.name || user?.email?.split("@")[0] || DEFAULT_USERNAME;
+  const username = user?.username || DEFAULT_USERNAME;
 
   const { data: resources = [], isPending, isError, refetch } = useResource();
   const [query, setQuery] = useState("");
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // middleware
   if (!user && !sessionPending) {
-    router.push('/login');
+    router.push("/login");
     return null;
   }
 
-  // Dynamic stats calculation
-  const totalResources = resources.length;
-  const liveEndpoints = resources.length;
-
-  const totalBytes = resources.reduce((acc, r) => {
-    try {
-      return acc + new TextEncoder().encode(JSON.stringify(r.data)).length;
-    } catch {
-      return acc;
-    }
-  }, 0);
-
-  const formattedSize =
-    totalBytes >= 1024 * 1024
-      ? `${(totalBytes / (1024 * 1024)).toFixed(1)} MB`
-      : totalBytes >= 1024
-      ? `${(totalBytes / 1024).toFixed(1)} KB`
-      : `${totalBytes} B`;
-
-  const stats = [
-    { label: "Total Resources", value: totalResources.toString(), icon: HiOutlineCube },
-    { label: "Endpoints Live", value: liveEndpoints.toString(), icon: HiOutlineServerStack },
-    { label: "Total Storage", value: formattedSize, icon: HiOutlineClock },
-  ];
-
   const getEndpoint = (r: Resource) =>
-    `${PUBLIC_BASE_URL}/${username}/${r.slug}`;
+    `${PUBLIC_BASE_URL}/api/${username}/${r.slug}`;
 
   if (isPending) {
     return (
@@ -81,17 +99,27 @@ export default function DashboardPage() {
   }
 
   if (isError) {
-    return(
+    return (
       <div className="min-h-screen">
         <DashboardNav />
-        <main className="mx-auto max-w-6xl px-6 py-10">
+        <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           <p className="text-sm text-red-500">
-            Failed to load resource. Please try again
+            Gagal memuat resource. Silakan coba lagi.
           </p>
         </main>
       </div>
-    )
+    );
   }
+
+  const usedBytes = resources.reduce((acc, r) => {
+    try {
+      return acc + new TextEncoder().encode(JSON.stringify(r.data)).length;
+    } catch {
+      return acc;
+    }
+  }, 0);
+
+  const atLimit = resources.length >= LIMITS.MAX_RESOURCES;
 
   const filtered = resources.filter(
     (r) =>
@@ -99,22 +127,24 @@ export default function DashboardPage() {
       r.slug.toLowerCase().includes(query.toLowerCase()),
   );
 
-  const handleCopy = async (r: Resource) => {
+  const handlePatch = async (r: Resource) => {
     try {
-      await navigator.clipboard.writeText(getEndpoint(r));
-      setCopiedId(r.id);
-      setTimeout(() => setCopiedId(null), 1500);
+      await api.patch(`/api/resources/${r.id}`, { published: !r.published });
+      refetch();
     } catch {
-      /* clipboard unavailable */
+      console.error("failed to toggle publish");
     }
   };
 
   const handleDelete = async (id: string) => {
+    const resource = resources.find((r) => r.id === id);
+    if (!resource) return;
+    if (!confirm(`Delete "${resource.name}"? This cannot be undone.`)) return;
     try {
       await api.delete(`/api/resources/${id}`);
       refetch();
     } catch {
-      console.error('failed to delete')
+      console.error("failed to delete");
     }
   };
 
@@ -122,93 +152,86 @@ export default function DashboardPage() {
     <div className="min-h-screen">
       <DashboardNav />
 
-      <main className="mx-auto max-w-6xl px-6 py-10">
-        <div className="mb-6 flex items-center gap-2">
-          <h1 className="text-2xl font-medium sm:text-3xl">Welcome back,</h1>
-          <span className="text-2xl font-bold text-primary sm:text-3xl">
-            {user?.name || user?.email?.split("@")[0] || "Developer"}
-          </span>
-        </div>
-
-        {/* Heading */}
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-              My Resources
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Manage your JSON endpoints
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        {/* Header */}
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Dashboard
+            </h1>
+            <p className="mt-1 truncate text-sm text-muted-foreground">
+              @{username} · {resources.length}{" "}
+              {resources.length === 1 ? "resource" : "resources"}
             </p>
           </div>
 
-          <Link
-            href="/dashboard/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-background transition-all duration-200 hover:bg-primary-hover hover:shadow-[0_4px_24px_rgba(34,197,94,0.3)]"
-          >
-            <HiOutlinePlus className="h-5 w-5" />
-            Create Resource
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            {atLimit && (
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                Limit tercapai
+              </span>
+            )}
+            <Link
+              href={atLimit ? "/dashboard" : "/dashboard/new"}
+              aria-disabled={atLimit}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-background transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <HiOutlinePlus className="h-4 w-4" />
+              <span className="hidden sm:inline">New Resource</span>
+              <span className="sm:hidden">New</span>
+            </Link>
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {stats.map((s) => {
-            const Icon = s.icon;
-            return (
-              <div
-                key={s.label}
-                className="flex items-center gap-4 rounded-xl border border-border/70 bg-card/60 p-5"
-              >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-heading text-xl font-bold leading-none">
-                    {s.value}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {s.label}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+        {/* Usage */}
+        <div className="mb-8 grid gap-4 sm:grid-cols-2">
+          <UsageBlock
+            label="Resources"
+            hint={`Max ${LIMITS.MAX_RESOURCES} resource per user`}
+            used={resources.length}
+            max={LIMITS.MAX_RESOURCES}
+            usedText={`${resources.length}`}
+            maxText={`${LIMITS.MAX_RESOURCES}`}
+          />
+          <UsageBlock
+            label="Storage"
+            hint={`Maks ${formatBytes(LIMITS.MAX_JSON_SIZE)} per resource`}
+            used={usedBytes}
+            max={STORAGE_LIMIT}
+            usedText={formatBytes(usedBytes)}
+            maxText={formatBytes(STORAGE_LIMIT)}
+          />
         </div>
 
-        {/* Search + filter row */}
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex flex-1 items-center gap-2 rounded-xl border border-border/60 bg-card/40 px-3 py-2.5 transition-colors focus-within:border-primary/50">
-            <HiOutlineMagnifyingGlass className="h-4 w-4 text-muted-foreground" />
+        {/* Search */}
+        <div className="mb-6 max-w-md">
+          <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3.5 py-2.5 transition-colors focus-within:border-primary/50">
+            <HiOutlineMagnifyingGlass className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search resources..."
+              placeholder="Cari resource..."
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
-          <div className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
-            <span className="rounded-full bg-card/60 px-3 py-1.5 border border-border/60">
-              {filtered.length} shown
-            </span>
-          </div>
         </div>
 
-        {/* Resource list */}
+        {/* Resource grid */}
         {filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-16 text-center">
-            <HiOutlineDocumentText className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
-            <h3 className="mb-1 font-heading text-lg font-semibold">
-              No resources found
-            </h3>
-            <p className="mb-6 text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-border/80 bg-card/40 px-6 py-16 text-center">
+            <HiOutlineDocumentText className="mx-auto mb-4 h-10 w-10 text-muted-foreground/40" />
+            <h2 className="font-heading text-lg font-semibold">
+              {query ? "Tidak ada hasil" : "Belum ada resource"}
+            </h2>
+            <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
               {query
-                ? "Try a different search term."
-                : "Create your first JSON endpoint to get started."}
+                ? "Coba kata kunci lain."
+                : "Buat resource pertamamu untuk mendapatkan public API endpoint."}
             </p>
             {!query && (
               <Link
                 href="/dashboard/new"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-background hover:bg-primary-hover"
+                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-background hover:bg-primary-hover"
               >
                 <HiOutlinePlus className="h-4 w-4" />
                 Create Resource
@@ -216,98 +239,15 @@ export default function DashboardPage() {
             )}
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((r) => (
-              <div
+              <ResourceCard
                 key={r.id}
-                className="group relative flex flex-col rounded-xl border border-border/70 bg-card/60 p-5 transition-all duration-300 hover:border-primary/25 hover:bg-card"
-              >
-                {/* Resource header */}
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <HiOutlineDocumentText className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="truncate font-heading font-semibold leading-tight">
-                      {r.name}
-                    </h3>
-                    <span
-                      className={`inline-flex items-center gap-1.5 text-xs ${
-                        r.type === "collection"
-                          ? "text-blue-400"
-                          : "text-green-400"
-                      }`}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                      {r.type === "collection" ? "Collection" : "Object"}
-                    </span>
-                  </div>
-                  <span className="ml-auto shrink-0 rounded-md border border-border/60 px-2 py-0.5 text-[10px] text-muted-foreground">
-                    {r.size}
-                  </span>
-                </div>
-
-                {/* Endpoint */}
-                <a
-                  href={getEndpoint(r)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mb-4 truncate rounded-lg border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {r.slug}
-                </a>
-
-                {/* Meta */}
-                <p className="mb-5 text-xs text-muted-foreground/70">
-                  Updated {r.updatedAt}
-                </p>
-
-                {/* Actions */}
-                <div className="mt-auto flex items-center gap-2">
-                  <button
-                    onClick={() => handleCopy(r)}
-                    className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
-                      copiedId === r.id
-                        ? "border-primary/40 text-primary"
-                        : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {copiedId === r.id ? (
-                      <>
-                        <HiCheck className="h-3.5 w-3.5" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <HiOutlineLink className="h-3.5 w-3.5" />
-                        Copy
-                      </>
-                    )}
-                  </button>
-                  <Link
-                    href={getEndpoint(r)}
-                    target="_blank"
-                    aria-label={`Open ${r.name}`}
-                    className="inline-flex items-center justify-center rounded-lg border border-border px-3 py-2 text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground"
-                  >
-                    <HiOutlineArrowTopRightOnSquare className="h-3.5 w-3.5" />
-                  </Link>
-                  <Link
-                    href={`/resources/${r.id}`}
-                    aria-label={`Edit ${r.name}`}
-                    className="inline-flex items-center justify-center rounded-lg border border-border px-3 py-2 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-                  >
-                    <HiOutlinePencil className="h-3.5 w-3.5" />
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    aria-label={`Delete ${r.name}`}
-                    className="inline-flex items-center justify-center rounded-lg border border-border px-3 py-2 text-muted-foreground transition-colors hover:border-red-500/40 hover:text-red-400"
-                  >
-                    <HiOutlineTrash className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
+                resource={r}
+                endpoint={getEndpoint(r)}
+                onTogglePublish={handlePatch}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}

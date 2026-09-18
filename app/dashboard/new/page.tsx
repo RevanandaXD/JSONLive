@@ -9,7 +9,7 @@ import { FormatJSON } from "./format";
 import { useRouter } from "next/navigation";
 import { useCreateResources } from "@/hooks/useCreateResource";
 import { useSession } from "@/src/lib/auth-client";
-import { DEFAULT_USERNAME } from "@/src/lib/config";
+import { DEFAULT_USERNAME, PUBLIC_BASE_URL } from "@/src/lib/config";
 
 type EditorStatus = "valid" | "invalid" | "empty";
 
@@ -35,10 +35,12 @@ export default function CreateResourcePage() {
   const [name, setName] = useState("");
   const [data, setData] = useState("");
   const [touched, setTouched] = useState(false);
+  const [published, setPublished] = useState(true);
 
   const router = useRouter();
   const { data: sessionData, isPending: sessionPending } = useSession();
   const user = sessionData?.user;
+  const username = user?.username || DEFAULT_USERNAME;
   const { createResource, isPending, isError } = useCreateResources();
 
   if (!user && !sessionPending) {
@@ -87,6 +89,7 @@ export default function CreateResourcePage() {
       await createResource({
         name: name.trim(),
         data: JSON.parse(data),
+        published,
       });
       router.push("/dashboard");
     } catch (err: unknown) {
@@ -108,7 +111,7 @@ export default function CreateResourcePage() {
     <div className="min-h-screen">
       <DashboardNav />
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
         {/* Heading */}
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -150,9 +153,35 @@ export default function CreateResourcePage() {
                 />
                 {slug && (
                   <p className="mt-2 truncate rounded-lg border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground">
-                    /{DEFAULT_USERNAME}/{slug}
+                    {PUBLIC_BASE_URL}/api/{username}/{slug}
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="mb-2 flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold">Publish to public API</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={published}
+                    onClick={() => setPublished((p) => !p)}
+                    className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+                      published ? "bg-primary" : "bg-border"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${
+                        published ? "left-[18px]" : "left-0.5"
+                      }`}
+                    />
+                  </button>
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  {published
+                    ? "Anyone can GET this endpoint on /public."
+                    : "Kept private until you publish it from the dashboard."}
+                </p>
               </div>
 
               <div className="flex flex-col gap-2">

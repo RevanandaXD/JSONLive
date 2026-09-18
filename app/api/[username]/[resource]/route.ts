@@ -26,8 +26,8 @@ export async function GET(
     );
   }
 
-  const found = await prisma.resource.findFirst({
-    where: { userId: user.id, slug: resource },
+const found = await prisma.resource.findFirst({
+    where: { userId: user.id, slug: resource, published: true },
   });
 
   if (!found) {

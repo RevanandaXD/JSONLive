@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
+import { Logo } from "./Logo";
 
 const navLinks = [
   { name: "Features", route: "#features" },
@@ -19,15 +20,7 @@ export const Navbar = () => {
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-6">
           {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-heading font-bold tracking-tight text-foreground"
-          >
-            <span className="inline-flex items-center justify-center rounded-md bg-primary px-1.5 py-0.5 font-mono text-[10px] font-black text-background">
-              {"{ }"}
-            </span>
-            <span className="text-lg">JSONLive</span>
-          </Link>
+          <Logo className="text-lg" />
 
           {/* Desktop Links */}
           <div className="hidden items-center gap-1 md:flex">

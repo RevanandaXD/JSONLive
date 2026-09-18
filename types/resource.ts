@@ -3,9 +3,10 @@ export interface Resource {
     userId: string,
     name: string,
     slug: string,
-    data: string,
+data: string,
     size: number,
     type: string,
+    published: boolean,
     createdAt: string,
     updatedAt: string,
 }

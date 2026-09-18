@@ -5,6 +5,7 @@ import { api } from "@/src/lib/api";
 interface CreateResourceInput {
   name: string;
   data: unknown;
+  published?: boolean;
 }
 
 export const useCreateResources = () => {

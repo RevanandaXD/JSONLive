@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FiGithub, FiArrowUpRight } from "react-icons/fi";
+import { Logo } from "./Logo";
 
 export const Footer = () => {
   return (
@@ -8,15 +9,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="flex flex-col gap-3 lg:col-span-2">
-            <Link
-              href="/"
-              className="flex items-center gap-2 font-heading font-bold text-lg w-fit"
-            >
-              <span className="rounded-md bg-primary px-1.5 py-0.5 font-mono text-xs font-black text-background">
-                {"{ }"}
-              </span>
-              <span>JSONLive</span>
-            </Link>
+            <Logo href="/" className="w-fit text-lg" />
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               The simplest way to turn JSON into a usable API. Paste, save, and
               get a public endpoint.
@@ -29,7 +22,7 @@ export const Footer = () => {
               aria-label="GitHub"
             >
               <FiGithub className="w-3.5 h-3.5" />
-              View on GitHub
+              Support Me
             </a>
           </div>
 
