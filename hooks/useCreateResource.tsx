@@ -6,6 +6,7 @@ interface CreateResourceInput {
   name: string;
   data: unknown;
   published?: boolean;
+  private?: boolean;
 }
 
 export const useCreateResources = () => {
@@ -24,5 +25,6 @@ export const useCreateResources = () => {
     createResource: createResource.mutateAsync,
     isPending: createResource.isPending,
     isError: createResource.isError,
+    error: createResource.error,
   };
 };

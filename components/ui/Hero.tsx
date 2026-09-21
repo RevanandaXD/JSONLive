@@ -25,9 +25,8 @@ const item: Variants = {
 };
 
 export const Hero = () => {
-
   const { data: sessionData } = useSession();
-  const isLoggedIn = !!sessionData?.user
+  const isLoggedIn = !!sessionData?.user;
 
   return (
     <section className="bg-primary" id="hero-section">

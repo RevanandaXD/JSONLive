@@ -181,10 +181,10 @@ export default function LoginPage() {
                 >
                   Log in
                 </button>
-                <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-white rounded-md cursor-pointer transition ease-in duration-200 hover:bg-white hover:text-black">
+                {/* <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-white rounded-md cursor-pointer transition ease-in duration-200 hover:bg-white hover:text-black">
                   <FaGithub size={15} />
                   <span className="text-sm font-medium">Github</span>
-                </button>
+                </button> */}
               </form>
 
               <p className="mt-5 text-sm text-muted-foreground">

@@ -22,9 +22,15 @@ async function request<T>(
   };
 
   const res = await fetch(`${BASE_URL}${endpoint}`, config);
-  if (!res.ok) throw new Error(`Failed to Request: ${res.status}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const errorMsg = (data as { error?: string })?.error || `Failed to Request: ${res.status}`;
+    const error = new Error(errorMsg) as Error & { status?: number };
+    error.status = res.status;
+    throw error;
+  }
 
-  return res.json();
+  return data as T;
 }
 
 export const api = {

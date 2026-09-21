@@ -17,5 +17,11 @@ export const auth = betterAuth({
                 required: false,
             }
         }
-    }
+    },
+    // Next Update
+    // socialProviders: {
+    //     github: {
+    //         clientId, clientSecret
+    //     }
+    // }
 })

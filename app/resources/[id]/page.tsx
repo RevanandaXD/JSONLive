@@ -12,6 +12,8 @@ import {
   HiOutlineChevronRight,
   HiOutlineEye,
   HiOutlineEyeSlash,
+  HiOutlineLockClosed,
+  HiOutlineLockOpen,
 } from "react-icons/hi2";
 import { HiCheck } from "react-icons/hi";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +23,9 @@ import { useSession } from "@/src/lib/auth-client";
 import { PUBLIC_BASE_URL } from "@/src/lib/config";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { Resource } from "@/types/resource";
+
+const outlineBtn =
+  "inline-flex items-center justify-center gap-2 border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground";
 
 export default function ResourceDetailPage() {
   const params = useParams<{ id: string }>();
@@ -105,6 +110,17 @@ export default function ResourceDetailPage() {
     }
   };
 
+  const handleTogglePrivate = async () => {
+    try {
+      await api.patch(`/api/resources/${data.id}`, {
+        private: !data.private,
+      });
+      refetch();
+    } catch {
+      /* fallthrough */
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm(`Delete "${data.name}"? This cannot be undone.`)) return;
     try {
@@ -114,6 +130,22 @@ export default function ResourceDetailPage() {
       /* fallthrough */
     }
   };
+
+  const status = !data.published
+    ? "draft"
+    : data.private
+      ? "private"
+      : "public";
+  const statusClass = {
+    draft: "border-border bg-muted text-muted-foreground",
+    private: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+    public: "border-primary/40 bg-primary/10 text-primary",
+  }[status];
+  const statusLabel = {
+    draft: "Draft",
+    private: "Private",
+    public: "Published",
+  }[status];
 
   return (
     <div className="min-h-screen">
@@ -130,7 +162,7 @@ export default function ResourceDetailPage() {
         </Link>
 
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
               <HiOutlineDocumentText className="h-4 w-4" />
@@ -142,23 +174,19 @@ export default function ResourceDetailPage() {
                 {data.name}
               </h1>
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-xs font-medium ${
                   type === "collection"
                     ? "border-blue-400/30 text-blue-400"
                     : "border-green-400/30 text-green-400"
                 }`}
               >
-                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                <span className="h-1.5 w-1.5 bg-current" />
                 {type === "collection" ? "Collection" : "Object"}
               </span>
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                  data.published
-                    ? "bg-primary/10 text-primary"
-                    : "bg-muted text-muted-foreground"
-                }`}
+                className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-xs font-semibold ${statusClass}`}
               >
-                {data.published ? "Published" : "Draft"}
+                {statusLabel}
               </span>
             </div>
             <p className="mt-1.5 text-sm text-muted-foreground">
@@ -166,30 +194,33 @@ export default function ResourceDetailPage() {
             </p>
           </div>
 
-          <button
-            onClick={handleCopy}
-            className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-colors ${
-              copied
-                ? "border border-primary/40 text-primary"
-                : "bg-primary text-background hover:bg-primary-hover"
-            }`}
-          >
-            {copied ? (
-              <>
-                <HiCheck className="h-4 w-4" />
-                Copied
-              </>
-            ) : (
-              <>
-                <HiOutlineLink className="h-4 w-4" />
-                Copy URL
-              </>
-            )}
-          </button>
+          {/* Actions */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleCopy}
+              className={`inline-flex items-center justify-center gap-2 border px-4 py-2.5 text-sm font-bold transition-colors ${
+                copied
+                  ? "border-primary/40 text-primary"
+                  : "border-primary bg-primary text-background hover:bg-primary-hover"
+              }`}
+            >
+              {copied ? (
+                <>
+                  <HiCheck className="h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <HiOutlineLink className="h-4 w-4" />
+                  Copy URL
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Endpoint */}
-        <div className="mb-8 rounded-xl border border-border/70 bg-card/60">
+        <div className="mb-8 border border-border/70 bg-card/60">
           <div className="border-b border-border/60 px-5 py-3">
             <span className="text-xs font-semibold text-muted-foreground">
               Public Endpoint
@@ -197,7 +228,7 @@ export default function ResourceDetailPage() {
           </div>
           <div className="flex items-center gap-3 px-5 py-4">
             <div className="flex flex-1 items-center gap-2 overflow-hidden">
-              <span className="rounded-md bg-primary/15 px-2 py-1 font-mono text-xs font-bold text-primary">
+              <span className="bg-primary/15 px-2 py-1 font-mono text-xs font-bold text-primary">
                 GET
               </span>
               <code className="truncate font-mono text-sm text-muted-foreground">
@@ -208,7 +239,7 @@ export default function ResourceDetailPage() {
         </div>
 
         {/* JSON */}
-        <div className="overflow-hidden rounded-xl border border-border/70 bg-card/60">
+        <div className="overflow-hidden border border-border/70 bg-card/60">
           <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
             <span className="text-xs font-semibold text-muted-foreground">
               JSON Data
@@ -223,18 +254,12 @@ export default function ResourceDetailPage() {
         </div>
 
         {/* Actions */}
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Link
-            href={`/dashboard/new?edit=${data.id}`}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-background hover:bg-primary-hover"
-          >
+        <div className="mt-8 flex flex-wrap items-center justify-end gap-2">
+          <Link href={`/dashboard/new?edit=${data.id}`} className={outlineBtn}>
             <HiOutlinePencil className="h-4 w-4" />
             Edit
           </Link>
-          <button
-            onClick={handleTogglePublish}
-            className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-muted-foreground hover:border-amber-500/40 hover:text-amber-400"
-          >
+          <button onClick={handleTogglePublish} className={outlineBtn}>
             {data.published ? (
               <HiOutlineEyeSlash className="h-4 w-4" />
             ) : (
@@ -243,8 +268,19 @@ export default function ResourceDetailPage() {
             {data.published ? "Unpublish" : "Publish"}
           </button>
           <button
+            onClick={handleTogglePrivate}
+            className={`${outlineBtn} hover:border-amber-500/40 hover:text-amber-400`}
+          >
+            {data.private ? (
+              <HiOutlineLockOpen className="h-4 w-4" />
+            ) : (
+              <HiOutlineLockClosed className="h-4 w-4" />
+            )}
+            {data.private ? "Make Public" : "Make Private"}
+          </button>
+          <button
             onClick={handleDelete}
-            className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-muted-foreground hover:border-red-500/40 hover:text-red-400"
+            className={`${outlineBtn} hover:border-red-500/40 hover:text-red-400`}
           >
             <HiOutlineTrash className="h-4 w-4" />
             Delete

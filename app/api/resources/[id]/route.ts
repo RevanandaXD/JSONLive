@@ -43,7 +43,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ status: 200, data: response });
+    return NextResponse.json({ status: 200, data: response }, { status: 200 });
   } catch (err: unknown) {
     return NextResponse.json(
       { status: 500, error: err instanceof Error ? err.message : "Internal Server Error" },
@@ -61,7 +61,7 @@ export async function PUT(
     if ("error" in result) return result.error;
 
     const { id } = await params;
-    const { name, data, published } = await request.json();
+    const { name, data, published, private: isPrivate } = await request.json();
 
     const response = await prisma.resource.findUnique({ where: { id } });
     if (!response)
@@ -84,10 +84,10 @@ export async function PUT(
 
     const updated = await prisma.resource.update({
       where: { id },
-      data: { name, slug, data, published },
+      data: { name, slug, data, private: isPrivate, published },
     });
 
-    return NextResponse.json({ status: 200, data: updated });
+    return NextResponse.json({ status: 200, data: updated }, { status: 200 });
   } catch (err: unknown) {
     return NextResponse.json(
       { status: 500, error: err instanceof Error ? err.message : "Internal Server Error" },
@@ -105,7 +105,7 @@ export async function PATCH(
     if ("error" in result) return result.error;
 
     const { id } = await params;
-    const { published } = await request.json();
+    const { published, private: isPrivate } = await request.json();
 
     const existing = await prisma.resource.findUnique({ where: { id } });
     if (!existing)
@@ -123,10 +123,10 @@ export async function PATCH(
 
     const updated = await prisma.resource.update({
       where: { id },
-      data: { published },
+      data: { ...(published !== undefined && { published }), ...(isPrivate !== undefined && { private: isPrivate }) },
     });
 
-    return NextResponse.json({ status: 200, data: updated });
+    return NextResponse.json({ status: 200, data: updated }, { status: 200 });
   } catch (err: unknown) {
     return NextResponse.json(
       { status: 500, error: err instanceof Error ? err.message : "Internal Server Error" },
@@ -166,7 +166,7 @@ export async function DELETE(
       where: { id },
     });
 
-    return NextResponse.json({ status: 200, data: deleted });
+    return NextResponse.json({ status: 200, data: deleted }, { status: 200 });
   } catch (err: unknown) {
     return NextResponse.json(
       { status: 500, error: err instanceof Error ? err.message : "Internal Server Error" },

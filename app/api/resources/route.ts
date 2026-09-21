@@ -23,12 +23,12 @@ export async function GET() {
     return NextResponse.json({
       status: 200,
       data: response,
-    })
+    }, { status: 200 })
   } catch { 
     return NextResponse.json({
       status: 500,
       error: 'Internal Server Error'
-    })
+    }, { status: 500 })
   }
 }
 
@@ -40,18 +40,18 @@ export async function POST(request: Request) {
     })
 
     if (!session) {
-      return NextResponse.json({error: "Unauthorized"}, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const userId = session.user.id
 
-    const { name, data, published } = await request.json();
+    const { name, data, published, private: isPrivate } = await request.json();
 
-    if (!name || !data) {
+    if (!name || data === undefined || data === null) {
       return NextResponse.json({
         status: 400,
         error: "Name and data are required",
-      })
+      }, { status: 400 })
     }
 
     const bodySize = new TextEncoder().encode(JSON.stringify(data)).length;
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         status: 400,
         error: "JSON size exceeds 1MB limit"
-      })
+      }, { status: 400 })
     }
 
     const count = await prisma.resource.count({
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         status: 400,
         error: `Resource limit reached (max ${LIMITS.MAX_RESOURCES})`
-      })
+      }, { status: 400 })
     }
     const slug = name
       .toLowerCase()
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         status: 409,
         error: "Resource with this name already exists"
-      })
+      }, { status: 409 })
     }
 
     const response = await prisma.resource.create({
@@ -94,6 +94,7 @@ export async function POST(request: Request) {
         name,
         slug,
         data,
+        private: isPrivate ?? false,
         published: published ?? true,
       }
     })
@@ -101,11 +102,11 @@ export async function POST(request: Request) {
     return NextResponse.json({
       status: 201,
       data: response,
-    })
+    }, { status: 201 })
   } catch {
     return NextResponse.json({
       status: 500,
-      error: 'Internal Error Server',
-    })
+      error: 'Internal Server Error',
+    }, { status: 500 })
   }
 }

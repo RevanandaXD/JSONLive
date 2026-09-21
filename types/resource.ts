@@ -6,6 +6,7 @@ export interface Resource {
 data: string,
     size: number,
     type: string,
+    private: boolean,
     published: boolean,
     createdAt: string,
     updatedAt: string,

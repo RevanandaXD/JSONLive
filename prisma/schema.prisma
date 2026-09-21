@@ -75,6 +75,7 @@ model Resource {
   name            String
   slug            String
   data            Json
+  private         Boolean     @default(false)
   published       Boolean     @default(true)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt

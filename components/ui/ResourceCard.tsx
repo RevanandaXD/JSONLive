@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   HiOutlineArrowTopRightOnSquare,
-  HiOutlineCube,
-  HiOutlineDocumentText,
   HiOutlineEllipsisHorizontal,
   HiOutlineEye,
   HiOutlineEyeSlash,
   HiOutlineLink,
-  HiOutlinePencil,
+  HiOutlineLockClosed,
+  HiOutlineLockOpen,
+  HiEye,
   HiOutlineTrash,
 } from "react-icons/hi2";
 import { HiCheck } from "react-icons/hi";
@@ -20,14 +20,12 @@ type Props = {
   resource: Resource;
   endpoint: string;
   onTogglePublish: (resource: Resource) => void;
+  onTogglePrivate: (resource: Resource) => void;
   onDelete: (id: string) => void;
 };
 
-const iconBtn =
-  "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground";
-
 const menuBtn =
-  "flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground";
+  "flex w-full items-center gap-2 rounded px-2.5 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground";
 
 function timeAgo(date: Date): string {
   const diff = Date.now() - date.getTime();
@@ -46,6 +44,7 @@ export function ResourceCard({
   resource: r,
   endpoint,
   onTogglePublish,
+  onTogglePrivate,
   onDelete,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -74,6 +73,21 @@ export function ResourceCard({
 
   const type = Array.isArray(r.data) ? "collection" : "object";
 
+  const status = !r.published ? "draft" : r.private ? "private" : "public";
+  const badgeClass = {
+    draft: "bg-muted/60 text-muted-foreground",
+    private: "bg-amber-500/10 text-amber-400",
+    public: "bg-primary/10 text-primary",
+  }[status];
+  const dotClass = {
+    draft: "bg-muted-foreground",
+    private: "bg-amber-400",
+    public: "bg-primary",
+  }[status];
+  const label = { draft: "Draft", private: "Private", public: "Published" }[
+    status
+  ];
+
   const copyEndpoint = async () => {
     try {
       await navigator.clipboard.writeText(endpoint);
@@ -85,37 +99,22 @@ export function ResourceCard({
   };
 
   return (
-    <div className="flex flex-col rounded-xl border border-border/70 bg-card/60 p-4 transition-colors hover:border-primary/30 hover:bg-card sm:p-5">
+    <main className="flex flex-col rounded-md border border-border/70 bg-card/60 p-4 transition-colors hover:border-primary/40 hover:bg-card sm:p-5">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          {type === "collection" ? (
-            <HiOutlineCube className="h-5 w-5" />
-          ) : (
-            <HiOutlineDocumentText className="h-5 w-5" />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="truncate font-heading font-semibold leading-tight text-foreground">
             {r.name}
           </h3>
-          <p className="truncate text-xs text-muted-foreground">
-            {type === "collection" ? "Collection" : "Object"}
+          <p className="mt-0.5 text-xs text-muted-foreground capitalize">
+            {type}
           </p>
         </div>
         <span
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-            r.published
-              ? "bg-primary/10 text-primary"
-              : "bg-muted/60 text-muted-foreground"
-          }`}
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded px-2 py-0.5 text-[11px] font-semibold ${badgeClass}`}
         >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              r.published ? "bg-primary" : "bg-muted-foreground"
-            }`}
-          />
-          {r.published ? "Published" : "Draft"}
+          <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
+          {label}
         </span>
       </div>
 
@@ -125,7 +124,7 @@ export function ResourceCard({
         target="_blank"
         rel="noopener noreferrer"
         title={endpoint}
-        className="mt-4 flex min-w-0 items-center gap-1.5 rounded-lg border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+        className="mt-4 flex min-w-0 items-center gap-1.5 rounded border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         <HiOutlineLink className="h-3.5 w-3.5 shrink-0 text-primary" />
         <span className="truncate">
@@ -139,88 +138,101 @@ export function ResourceCard({
           Updated {timeAgo(new Date(r.updatedAt))}
         </span>
 
-        <div className="flex items-center gap-1.5">
-          <a
-            href={endpoint}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Open ${r.name}`}
-            title="Open"
-            className={iconBtn}
-          >
-            <HiOutlineArrowTopRightOnSquare className="h-4 w-4" />
-          </a>
+        <div ref={menuRef} className="relative flex items-center gap-2">
           <Link
             href={`/resources/${r.id}`}
-            aria-label={`Edit ${r.name}`}
-            title="Edit"
-            className={iconBtn}
+            onClick={() => setMenuOpen(false)}
+            className="inline-flex py-2 px-3 justify-center rounded border border-border text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground items-center gap-2 text-xs"
           >
-            <HiOutlinePencil className="h-4 w-4" />
+            <HiEye className="h-4 w-4" />
+            View
           </Link>
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="More actions"
+            aria-expanded={menuOpen}
+            className="inline-flex h-8 w-8 items-center justify-center rounded border border-border text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground"
+          >
+            <HiOutlineEllipsisHorizontal className="h-4 w-4" />
+          </button>
 
-          <div ref={menuRef} className="relative">
-            <button
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label="More actions"
-              aria-expanded={menuOpen}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground"
-            >
-              <HiOutlineEllipsisHorizontal className="h-4 w-4" />
-            </button>
-
-            {menuOpen && (
-              <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg border border-border bg-background p-1 shadow-xl">
-                <button
-                  onClick={copyEndpoint}
-                  className={menuBtn}
-                >
-                  {copied ? (
-                    <>
-                      <HiCheck className="h-4 w-4 text-primary" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <HiOutlineLink className="h-4 w-4" />
-                      Copy URL
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    onTogglePublish(r);
-                    setMenuOpen(false);
-                  }}
-                  className={menuBtn}
-                >
-                  {r.published ? (
-                    <>
-                      <HiOutlineEyeSlash className="h-4 w-4" />
-                      Unpublish
-                    </>
-                  ) : (
-                    <>
-                      <HiOutlineEye className="h-4 w-4" />
-                      Publish
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    onDelete(r.id);
-                    setMenuOpen(false);
-                  }}
-                  className={`${menuBtn} text-red-500 hover:bg-red-500/10 hover:text-red-400`}
-                >
-                  <HiOutlineTrash className="h-4 w-4" />
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
+          {menuOpen && (
+            <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-md border border-border bg-background p-1 shadow-xl">
+              <a
+                href={endpoint}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className={menuBtn}
+              >
+                <HiOutlineArrowTopRightOnSquare className="h-4 w-4" />
+                Open
+              </a>
+              <button onClick={copyEndpoint} className={menuBtn}>
+                {copied ? (
+                  <>
+                    <HiCheck className="h-4 w-4 text-primary" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <HiOutlineLink className="h-4 w-4" />
+                    Copy URL
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  onTogglePublish(r);
+                  setMenuOpen(false);
+                }}
+                className={menuBtn}
+              >
+                {r.published ? (
+                  <>
+                    <HiOutlineEyeSlash className="h-4 w-4" />
+                    Unpublish
+                  </>
+                ) : (
+                  <>
+                    <HiOutlineEye className="h-4 w-4" />
+                    Publish
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  onTogglePrivate(r);
+                  setMenuOpen(false);
+                }}
+                className={menuBtn}
+              >
+                {r.private ? (
+                  <>
+                    <HiOutlineLockOpen className="h-4 w-4" />
+                    Make Public
+                  </>
+                ) : (
+                  <>
+                    <HiOutlineLockClosed className="h-4 w-4" />
+                    Make Private
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  onDelete(r.id);
+                  setMenuOpen(false);
+                }}
+                className={`${menuBtn} text-red-500 hover:bg-red-500/10 hover:text-red-400`}
+              >
+                <HiOutlineTrash className="h-4 w-4" />
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

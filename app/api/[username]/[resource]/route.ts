@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/prisma";
+import { auth } from "@/src/lib/auth";
+import { headers } from 'next/headers'
 
 type DbParams = {
   username: string;
@@ -35,6 +37,14 @@ const found = await prisma.resource.findFirst({
       { error: "Resource not found" },
       { status: 404, headers: corsHeaders },
     );
+  }
+
+  if (found.private) {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session || session.user.id !== found.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders })
+    }
   }
 
   return NextResponse.json(found.data, { headers: corsHeaders });

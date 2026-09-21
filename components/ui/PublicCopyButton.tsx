@@ -20,7 +20,7 @@ export function PublicCopyButton({ endpoint }: { endpoint: string }) {
     <button
       onClick={handleCopy}
       aria-label="Copy endpoint"
-      className={`inline-flex shrink-0 items-center justify-center rounded-lg border px-3 py-2 transition-colors ${
+      className={`inline-flex shrink-0 items-center justify-center rounded-md border px-3 py-2 transition-colors ${
         copied
           ? "border-primary/40 text-primary"
           : "border-border text-muted-foreground hover:text-foreground"

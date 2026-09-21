@@ -49,7 +49,7 @@ function UsageBlock({
     ratio >= 1 ? "bg-red-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-primary";
 
   return (
-    <div className="rounded-xl border border-border/70 bg-card/60 p-4">
+    <div className="rounded-md border border-border/70 bg-card/60 p-4">
       <div className="mb-2.5 flex items-baseline justify-between gap-2">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground">{label}</p>
@@ -62,9 +62,9 @@ function UsageBlock({
           <span className="text-muted-foreground"> / {maxText}</span>
         </p>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
+      <div className="h-1.5 overflow-hidden rounded bg-muted/60">
         <div
-          className={`h-full rounded-full transition-all ${tone}`}
+          className={`h-full rounded transition-all ${tone}`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -127,14 +127,20 @@ export default function DashboardPage() {
       r.slug.toLowerCase().includes(query.toLowerCase()),
   );
 
-  const handlePatch = async (r: Resource) => {
+  const handlePatch = async (r: Resource, patch: Partial<Resource>) => {
     try {
-      await api.patch(`/api/resources/${r.id}`, { published: !r.published });
+      await api.patch(`/api/resources/${r.id}`, patch);
       refetch();
     } catch {
-      console.error("failed to toggle publish");
+      console.error("failed to patch resource");
     }
   };
+
+  const handleTogglePublish = (r: Resource) =>
+    handlePatch(r, { published: !r.published });
+
+  const handleTogglePrivate = (r: Resource) =>
+    handlePatch(r, { private: !r.private });
 
   const handleDelete = async (id: string) => {
     const resource = resources.find((r) => r.id === id);
@@ -154,12 +160,12 @@ export default function DashboardPage() {
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {/* Header */}
-        <div className="mb-6 flex items-end justify-between gap-4">
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end sm:gap-4">
           <div className="min-w-0">
             <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Dashboard
             </h1>
-            <p className="mt-1 truncate text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               @{username} · {resources.length}{" "}
               {resources.length === 1 ? "resource" : "resources"}
             </p>
@@ -174,7 +180,7 @@ export default function DashboardPage() {
             <Link
               href={atLimit ? "/dashboard" : "/dashboard/new"}
               aria-disabled={atLimit}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-background transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-background transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
             >
               <HiOutlinePlus className="h-4 w-4" />
               <span className="hidden sm:inline">New Resource</span>
@@ -205,7 +211,7 @@ export default function DashboardPage() {
 
         {/* Search */}
         <div className="mb-6 max-w-md">
-          <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3.5 py-2.5 transition-colors focus-within:border-primary/50">
+          <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/60 px-3.5 py-2.5 transition-colors focus-within:border-primary/50">
             <HiOutlineMagnifyingGlass className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               value={query}
@@ -218,7 +224,7 @@ export default function DashboardPage() {
 
         {/* Resource grid */}
         {filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border/80 bg-card/40 px-6 py-16 text-center">
+          <div className="rounded-md border border-dashed border-border/80 bg-card/40 px-6 py-16 text-center">
             <HiOutlineDocumentText className="mx-auto mb-4 h-10 w-10 text-muted-foreground/40" />
             <h2 className="font-heading text-lg font-semibold">
               {query ? "Tidak ada hasil" : "Belum ada resource"}
@@ -231,7 +237,7 @@ export default function DashboardPage() {
             {!query && (
               <Link
                 href="/dashboard/new"
-                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-background hover:bg-primary-hover"
+                className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-background hover:bg-primary-hover"
               >
                 <HiOutlinePlus className="h-4 w-4" />
                 Create Resource
@@ -245,7 +251,8 @@ export default function DashboardPage() {
                 key={r.id}
                 resource={r}
                 endpoint={getEndpoint(r)}
-                onTogglePublish={handlePatch}
+                onTogglePublish={handleTogglePublish}
+                onTogglePrivate={handleTogglePrivate}
                 onDelete={handleDelete}
               />
             ))}
@@ -255,3 +262,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
