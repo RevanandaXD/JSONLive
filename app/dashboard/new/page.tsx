@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { HiOutlineArrowLeft, HiOutlineClipboard, HiOutlineSparkles } from "react-icons/hi2";
 import { HiCheck, HiX } from "react-icons/hi";
 import { DashboardNav } from "@/components/ui/DashboardNav";
@@ -35,7 +35,7 @@ function parseJson(value: string): { ok: boolean; error?: string } {
 const fieldClass =
   "w-full rounded-none border border-border/70 bg-background px-4 py-2.5 text-sm outline-none transition-colors focus:border-primary/50";
 
-export default function CreateResourcePage() {
+function CreateResourcePage() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
 
@@ -341,5 +341,13 @@ export default function CreateResourcePage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function NewResourcePage() {
+  return (
+    <Suspense>
+      <CreateResourcePage />
+    </Suspense>
   );
 }

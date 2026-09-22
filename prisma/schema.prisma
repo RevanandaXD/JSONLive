@@ -20,6 +20,7 @@ model User {
   sessions         Session[]
   accounts         Account[]
   resources        Resource[]
+  apiKeys          ApiKey[]
 
   @@map("user")
 }
@@ -83,4 +84,19 @@ model Resource {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("resource")
+}
+
+model ApiKey {
+  id              String      @id @default(uuid())
+  userId          String
+  name            String
+  keyId           String      @unique
+  keyHash         String
+  lastUsedAt      DateTime?
+  expiresAt       DateTime?
+  createAt        DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_key")
 }
