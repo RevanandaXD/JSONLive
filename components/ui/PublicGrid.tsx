@@ -62,13 +62,13 @@ export function PublicGrid({ rows }: { rows: PublicRow[] }) {
           </div>
           <h3 className="mb-1 font-heading text-lg font-semibold">
             {rows.length === 0
-              ? "Belum ada API yang dipublikasikan"
-              : "Tidak ada hasil untuk pencarian ini"}
+              ? "No published APIs yet"
+              : "No results for this search"}
           </h3>
           <p className="text-sm text-muted-foreground">
             {rows.length === 0
-              ? "Login dan publish resource pertamamu, maka endpoint-nya akan muncul di halaman ini."
-              : "Coba kata kunci lain."}
+              ? "Log in and publish your first resource, and its endpoint will show up here."
+              : "Try a different keyword."}
           </p>
         </div>
       ) : (

@@ -66,7 +66,7 @@ export default function LoginPage() {
       <div className="relative z-10 flex min-h-screen items-center justify-center p-4 sm:p-6">
         {/* Main Card Container with fixed min-height for uniform layout */}
         <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-border/70 bg-card/80 shadow-2xl backdrop-blur-md md:min-h-[560px]">
-          {/* Tombol Exit (Close Button) */}
+          {/* Close Button */}
           <Link
             href="/"
             className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/60 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95"
@@ -77,12 +77,12 @@ export default function LoginPage() {
           </Link>
 
           <div className="grid grid-cols-1 md:grid-cols-2 md:min-h-[560px]">
-            {/* Section Kosong / Brand Panel (Sebelah Kiri) */}
+            {/* Empty / Brand Panel (Left Side) */}
             <div className="relative hidden flex-col justify-between border-r border-border/60 bg-gradient-to-br from-primary/10 via-card to-background p-8 md:flex md:min-h-[560px]">
-              {/* Logo di Kiri Atas */}
+              {/* Logo at Top Left */}
               <Logo href="/" className="text-xl" />
 
-              {/* Konten Tengah (Minimalis) */}
+              {/* Center Content (Minimalist) */}
               <div className="my-auto py-8">
                 <h2 className="font-heading text-2xl font-bold text-foreground">
                   Welcome back
@@ -93,15 +93,15 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* Footer Kiri */}
+              {/* Left Footer */}
               <div className="text-xs text-muted-foreground/60">
                 JSONLive API Platform
               </div>
             </div>
 
-            {/* Section Form (Sebelah Kanan) */}
+            {/* Form Section (Right Side) */}
             <div className="flex flex-col justify-center px-6 py-8 sm:px-8 md:min-h-[560px]">
-              {/* Logo khusus tampilan Mobile (saat panel kiri tersembunyi) */}
+              {/* Logo for mobile view (shown when the left panel is hidden) */}
               <Logo href="/" className="mb-6 text-xl md:hidden" />
 
               <div className="mb-6">

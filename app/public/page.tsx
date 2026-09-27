@@ -45,8 +45,8 @@ export default async function PublicPage() {
             Public APIs
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Endpoint berikut dapat langsung di-fetch dari aplikasi kamu — tanpa
-            backend, tanpa setup, tanpa autentikasi.
+            The endpoints below can be fetched straight from your app — no
+            backend, no setup, no authentication.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">

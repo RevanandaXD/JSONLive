@@ -72,7 +72,7 @@ export default function ResourceDetailPage() {
             Back to Dashboard
           </Link>
           <p className="text-sm text-red-500">
-            Resource tidak ditemukan atau kamu tidak memiliki akses ke resource ini.
+            Resource not found, or you do not have access to this resource.
           </p>
         </main>
       </div>

@@ -40,7 +40,7 @@ function DeleteAccountSection({ email }: { email: string }) {
 
       if (!res.ok) {
         const json = await res.json().catch(() => null);
-        setError(json?.error ?? "Gagal menghapus akun. Coba lagi.");
+        setError(json?.error ?? "Failed to delete account. Please try again.");
         setLoading(false);
         return;
       }
@@ -48,13 +48,13 @@ function DeleteAccountSection({ email }: { email: string }) {
       try {
         await signOut();
       } catch {
-        // session sudah terhapus di server, aman diabaikan
+        // session was already removed on the server, safe to ignore
       }
 
       router.push("/");
       router.refresh();
     } catch {
-      setError("Terjadi kesalahan. Coba lagi.");
+      setError("Something went wrong. Please try again.");
       setLoading(false);
     }
   };
@@ -71,8 +71,9 @@ function DeleteAccountSection({ email }: { email: string }) {
               Delete account
             </p>
             <p className="mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">
-              Menghapus akun akan menghapus permanen profil, semua resource,
-              dan public endpoint kamu. Tindakan ini tidak dapat dibatalkan.
+              Deleting your account permanently removes your profile, all
+              resources, and their public endpoints. This action cannot be
+              undone.
             </p>
           </div>
           <button
@@ -100,16 +101,16 @@ function DeleteAccountSection({ email }: { email: string }) {
               Delete your account?
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Seluruh profil, resource, dan public endpoint akan dihapus secara
-              permanen.
+              Your profile, all resources, and their public endpoints will be
+              permanently deleted.
             </p>
 
             <div className="mt-4 rounded-md border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-500">
-              Tindakan ini tidak dapat dibatalkan.
+              This action cannot be undone.
             </div>
 
             <label className="mt-5 block text-sm text-muted-foreground">
-              Ketik email kamu untuk konfirmasi:{" "}
+              Type your email to confirm:{" "}
               <span className="font-mono text-foreground">{email}</span>
             </label>
             <input
@@ -117,7 +118,7 @@ function DeleteAccountSection({ email }: { email: string }) {
               autoComplete="off"
               value={confirmInput}
               onChange={(e) => setConfirmInput(e.target.value)}
-              placeholder="kamu@email.com"
+              placeholder="you@email.com"
               className="mt-2 w-full rounded-md border border-border bg-card px-3.5 py-2.5 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary"
             />
 
@@ -177,7 +178,7 @@ function ApiKeysSection() {
       setRevealedKey(created.key);
       setName("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal membuat API key.");
+      setError(err instanceof Error ? err.message : "Failed to create API key.");
     }
   };
 
@@ -197,9 +198,13 @@ function ApiKeysSection() {
       <div className="border-b border-border/60 px-5 py-4">
         <h2 className="text-sm font-semibold">API Keys</h2>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          Gunakan API key di header <code className="font-mono text-primary">x-api-key</code>{" "}
-          (atau <code className="font-mono text-primary">Authorization: Bearer</code>) untuk
-          mengotorisasi POST, PUT, PATCH, dan DELETE pada public endpoint kamu.
+          Send your API key in the{" "}
+          <code className="font-mono text-primary">x-api-key</code> header (or{" "}
+          <code className="font-mono text-primary">
+            Authorization: Bearer
+          </code>
+          ) to authorize POST, PUT, PATCH, and DELETE requests on your public
+          endpoints.
         </p>
       </div>
 
@@ -207,11 +212,11 @@ function ApiKeysSection() {
         <div className="border-b border-border/60 px-5 py-4">
           <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3">
             <p className="text-sm font-semibold text-amber-500">
-              Simpan key ini sekarang!
+              Save this key now!
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Key hanya ditampilkan satu kali dan tidak bisa dilihat lagi setelah
-              halaman ini ditutup.
+              The key is shown only once and cannot be viewed again after this
+              page is closed.
             </p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
               <code className="min-w-0 flex-1 truncate rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground">
@@ -237,7 +242,7 @@ function ApiKeysSection() {
           onKeyDown={(e) => {
             if (e.key === "Enter") handleCreate();
           }}
-          placeholder="Nama key (mis. CI/CD, mobile app)"
+          placeholder="Key name (e.g. CI/CD, mobile app)"
           className="min-w-0 flex-1 rounded-md border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary"
         />
         <button
@@ -258,10 +263,10 @@ function ApiKeysSection() {
 
       <div className="border-t border-border/60 px-5 py-2">
         {isPending ? (
-          <p className="py-3 text-sm text-muted-foreground">Memuat API keys...</p>
+          <p className="py-3 text-sm text-muted-foreground">Loading API keys...</p>
         ) : keys.length === 0 ? (
           <p className="py-3 text-sm text-muted-foreground">
-            Belum ada API key. Buat satu untuk mengaktifkan write access.
+            No API keys yet. Create one to enable write access.
           </p>
         ) : (
           <ul className="divide-y divide-border/60">
@@ -279,8 +284,8 @@ function ApiKeysSection() {
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {key.lastUsedAt
-                      ? `Terakhir dipakai ${new Date(key.lastUsedAt).toLocaleString()}`
-                      : "Belum pernah dipakai"}
+                      ? `Last used ${new Date(key.lastUsedAt).toLocaleString()}`
+                      : "Never used"}
                     {key.expiresAt
                       ? ` · Expires ${new Date(key.expiresAt).toLocaleString()}`
                       : ""}
@@ -326,7 +331,7 @@ export default function SettingsPage() {
             Account
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Informasi akun kamu di JSONLive.
+            Your account information on JSONLive.
           </p>
         </div>
 

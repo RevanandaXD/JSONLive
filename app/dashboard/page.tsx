@@ -104,7 +104,7 @@ export default function DashboardPage() {
         <DashboardNav />
         <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           <p className="text-sm text-red-500">
-            Gagal memuat resource. Silakan coba lagi.
+            Failed to load resources. Please try again.
           </p>
         </main>
       </div>
@@ -174,7 +174,7 @@ export default function DashboardPage() {
           <div className="flex shrink-0 items-center gap-2">
             {atLimit && (
               <span className="hidden text-xs text-muted-foreground sm:inline">
-                Limit tercapai
+                Limit reached
               </span>
             )}
             <Link
@@ -193,7 +193,7 @@ export default function DashboardPage() {
         <div className="mb-8 grid gap-4 sm:grid-cols-2">
           <UsageBlock
             label="Resources"
-            hint={`Max ${LIMITS.MAX_RESOURCES} resource per user`}
+            hint={`Up to ${LIMITS.MAX_RESOURCES} resources per user`}
             used={resources.length}
             max={LIMITS.MAX_RESOURCES}
             usedText={`${resources.length}`}
@@ -201,7 +201,7 @@ export default function DashboardPage() {
           />
           <UsageBlock
             label="Storage"
-            hint={`Maks ${formatBytes(LIMITS.MAX_JSON_SIZE)} per resource`}
+            hint={`Up to ${formatBytes(LIMITS.MAX_JSON_SIZE)} per resource`}
             used={usedBytes}
             max={STORAGE_LIMIT}
             usedText={formatBytes(usedBytes)}
@@ -216,7 +216,7 @@ export default function DashboardPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari resource..."
+              placeholder="Search resources..."
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
@@ -227,12 +227,12 @@ export default function DashboardPage() {
           <div className="rounded-md border border-dashed border-border/80 bg-card/40 px-6 py-16 text-center">
             <HiOutlineDocumentText className="mx-auto mb-4 h-10 w-10 text-muted-foreground/40" />
             <h2 className="font-heading text-lg font-semibold">
-              {query ? "Tidak ada hasil" : "Belum ada resource"}
+              {query ? "No results" : "No resources yet"}
             </h2>
             <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
               {query
-                ? "Coba kata kunci lain."
-                : "Buat resource pertamamu untuk mendapatkan public API endpoint."}
+                ? "Try a different keyword."
+                : "Create your first resource to get a public API endpoint."}
             </p>
             {!query && (
               <Link

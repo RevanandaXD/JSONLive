@@ -256,7 +256,7 @@ function CreateResourcePage() {
                   </label>
                   <p className="text-xs text-muted-foreground">
                     {isPrivate
-                      ? "GET hanya bisa diakses oleh pemilik resource."
+                      ? "Only the resource owner can GET this endpoint."
                       : "Anyone can GET this endpoint without login."}
                   </p>
                 </div>
