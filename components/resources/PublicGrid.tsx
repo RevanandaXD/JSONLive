@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FiSearch, FiFolder, FiX } from "react-icons/fi";
-import { PublicCopyButton } from "@/components/ui/PublicCopyButton";
+import { FiFolder } from "react-icons/fi";
+import { Badge } from "@/components/ui/Badge";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SearchInput } from "@/components/ui/SearchInput";
 
 export type PublicRow = {
   id: string;
@@ -31,24 +34,13 @@ export function PublicGrid({ rows }: { rows: PublicRow[] }) {
     <section>
       {/* Toolbar */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-md">
-          <FiSearch className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name or username..."
-            className="w-full rounded-md border border-border/60 bg-card/60 py-2.5 pl-10 pr-9 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <FiX className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          placeholder="Search by name or username..."
+          ariaLabel="Search public endpoints"
+          className="w-full max-w-md"
+        />
 
         <p className="text-xs text-muted-foreground">
           Showing {filtered.length} of {rows.length}
@@ -56,21 +48,17 @@ export function PublicGrid({ rows }: { rows: PublicRow[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-md border border-dashed border-border bg-card/40 px-6 py-16 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <FiFolder className="h-6 w-6" />
-          </div>
-          <h3 className="mb-1 font-heading text-lg font-semibold">
-            {rows.length === 0
-              ? "No published APIs yet"
-              : "No results for this search"}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {rows.length === 0
+        <EmptyState
+          icon={FiFolder}
+          title={
+            rows.length === 0 ? "No published APIs yet" : "No results for this search"
+          }
+          description={
+            rows.length === 0
               ? "Log in and publish your first resource, and its endpoint will show up here."
-              : "Try a different keyword."}
-          </p>
-        </div>
+              : "Try a different keyword."
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((row) => (
@@ -88,16 +76,9 @@ export function PublicGrid({ rows }: { rows: PublicRow[] }) {
                     @{row.username}
                   </p>
                 </div>
-                <span
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded px-2 py-0.5 text-[11px] font-semibold ${
-                    row.type === "collection"
-                      ? "bg-blue-500/10 text-blue-400"
-                      : "bg-primary/10 text-primary"
-                  }`}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                <Badge tone={row.type === "collection" ? "sky" : "primary"}>
                   {row.type === "collection" ? "Collection" : "Object"}
-                </span>
+                </Badge>
               </div>
 
               {/* Endpoint */}
@@ -106,7 +87,7 @@ export function PublicGrid({ rows }: { rows: PublicRow[] }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 title={row.endpoint}
-                className="mb-3 flex min-w-0 flex-1 items-center gap-2 rounded border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+                className="mb-3 flex min-w-0 flex-1 items-center gap-2 rounded-md border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                 <span className="truncate">{row.endpoint}</span>
@@ -117,7 +98,11 @@ export function PublicGrid({ rows }: { rows: PublicRow[] }) {
                 <span className="text-[11px] text-muted-foreground/70">
                   Public endpoint
                 </span>
-                <PublicCopyButton endpoint={row.endpoint} />
+                <CopyButton
+                  value={row.endpoint}
+                  ariaLabel={`Copy endpoint for ${row.name}`}
+                  className="px-3 py-2"
+                />
               </div>
             </div>
           ))}

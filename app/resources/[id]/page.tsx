@@ -2,30 +2,35 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
 import {
   HiOutlineArrowLeft,
-  HiOutlineLink,
-  HiOutlinePencil,
-  HiOutlineTrash,
-  HiOutlineDocumentText,
   HiOutlineChevronRight,
+  HiOutlineDocumentText,
   HiOutlineEye,
   HiOutlineEyeSlash,
   HiOutlineLockClosed,
   HiOutlineLockOpen,
+  HiOutlinePencil,
+  HiOutlineTrash,
 } from "react-icons/hi2";
-import { HiCheck } from "react-icons/hi";
 import { useQuery } from "@tanstack/react-query";
-import { DashboardNav } from "@/components/ui/DashboardNav";
+import { DashboardNav } from "@/components/layout/DashboardNav";
+import { Badge } from "@/components/ui/Badge";
+import { Button, ButtonLink } from "@/components/ui/Button";
+import { Card, CardHeader } from "@/components/ui/Card";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/src/lib/api";
 import { useSession } from "@/src/lib/auth-client";
 import { PUBLIC_BASE_URL } from "@/src/lib/config";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { formatBytes } from "@/src/lib/format";
 import type { Resource } from "@/types/resource";
 
-const outlineBtn =
-  "inline-flex items-center justify-center gap-2 border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground";
+const STATUS = {
+  draft: { tone: "muted", label: "Draft" },
+  private: { tone: "amber", label: "Private" },
+  public: { tone: "primary", label: "Published" },
+} as const;
 
 export default function ResourceDetailPage() {
   const params = useParams<{ id: string }>();
@@ -33,9 +38,7 @@ export default function ResourceDetailPage() {
   const router = useRouter();
 
   const { data: sessionData } = useSession();
-  const user = sessionData?.user;
-  const username = user?.username ?? "";
-  const [copied, setCopied] = useState(false);
+  const username = sessionData?.user?.username ?? "";
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["resource", id],
@@ -80,41 +83,19 @@ export default function ResourceDetailPage() {
   }
 
   const type = Array.isArray(data.data) ? "collection" : "object";
-  const bytes = new TextEncoder().encode(JSON.stringify(data.data)).length;
-  const size =
-    bytes >= 1024 * 1024
-      ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-      : bytes >= 1024
-        ? `${(bytes / 1024).toFixed(1)} KB`
-        : `${bytes} B`;
+  const size = formatBytes(
+    new TextEncoder().encode(JSON.stringify(data.data)).length,
+  );
   const endpoint = `${PUBLIC_BASE_URL}/api/${username}/${data.slug}`;
+  const status = !data.published
+    ? "draft"
+    : data.private
+      ? "private"
+      : "public";
 
-  const handleCopy = async () => {
+  const toggle = async (patch: Partial<Resource>) => {
     try {
-      await navigator.clipboard.writeText(endpoint);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard unavailable */
-    }
-  };
-
-  const handleTogglePublish = async () => {
-    try {
-      await api.patch(`/api/resources/${data.id}`, {
-        published: !data.published,
-      });
-      refetch();
-    } catch {
-      /* fallthrough */
-    }
-  };
-
-  const handleTogglePrivate = async () => {
-    try {
-      await api.patch(`/api/resources/${data.id}`, {
-        private: !data.private,
-      });
+      await api.patch(`/api/resources/${data.id}`, patch);
       refetch();
     } catch {
       /* fallthrough */
@@ -130,22 +111,6 @@ export default function ResourceDetailPage() {
       /* fallthrough */
     }
   };
-
-  const status = !data.published
-    ? "draft"
-    : data.private
-      ? "private"
-      : "public";
-  const statusClass = {
-    draft: "border-border bg-muted text-muted-foreground",
-    private: "border-amber-500/40 bg-amber-500/10 text-amber-400",
-    public: "border-primary/40 bg-primary/10 text-primary",
-  }[status];
-  const statusLabel = {
-    draft: "Draft",
-    private: "Private",
-    public: "Published",
-  }[status];
 
   return (
     <div className="min-h-screen">
@@ -170,106 +135,75 @@ export default function ResourceDetailPage() {
               <span>/resources/{data.id}</span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="font-heading text-3xl font-medium tracking-tight">
+              <h1 className="font-heading text-3xl font-medium tracking-tight text-foreground">
                 {data.name}
               </h1>
-              <span
-                className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-xs font-medium ${
-                  type === "collection"
-                    ? "border-blue-400/30 text-blue-400"
-                    : "border-green-400/30 text-green-400"
-                }`}
-              >
-                <span className="h-1.5 w-1.5 bg-current" />
+              <Badge tone={type === "collection" ? "sky" : "primary"}>
                 {type === "collection" ? "Collection" : "Object"}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1.5 border px-2.5 py-0.5 text-xs font-semibold ${statusClass}`}
-              >
-                {statusLabel}
-              </span>
+              </Badge>
+              <Badge tone={STATUS[status].tone}>{STATUS[status].label}</Badge>
             </div>
             <p className="mt-1.5 text-sm text-muted-foreground">
               {size} · Updated {new Date(data.updatedAt).toLocaleString()}
             </p>
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={handleCopy}
-              className={`inline-flex items-center justify-center gap-2 border px-4 py-2.5 text-sm font-bold transition-colors ${
-                copied
-                  ? "border-primary/40 text-primary"
-                  : "border-primary bg-primary text-background hover:bg-primary-hover"
-              }`}
-            >
-              {copied ? (
-                <>
-                  <HiCheck className="h-4 w-4" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <HiOutlineLink className="h-4 w-4" />
-                  Copy URL
-                </>
-              )}
-            </button>
-          </div>
+          <CopyButton
+            value={endpoint}
+            label="Copy URL"
+            copiedLabel="Copied"
+            ariaLabel="Copy endpoint"
+            className="border-primary bg-primary px-4 py-2.5 text-sm text-background hover:bg-primary-hover hover:text-background"
+          />
         </div>
 
         {/* Endpoint */}
-        <div className="mb-8 border border-border/70 bg-card/60">
-          <div className="border-b border-border/60 px-5 py-3">
-            <span className="text-xs font-semibold text-muted-foreground">
-              Public Endpoint
-            </span>
-          </div>
+        <Card className="mb-8">
+          <CardHeader title="Public Endpoint" />
           <div className="flex items-center gap-3 px-5 py-4">
-            <div className="flex flex-1 items-center gap-2 overflow-hidden">
-              <span className="bg-primary/15 px-2 py-1 font-mono text-xs font-bold text-primary">
-                GET
-              </span>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <Badge tone="emerald">GET</Badge>
               <code className="truncate font-mono text-sm text-muted-foreground">
                 {endpoint}
               </code>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* JSON */}
-        <div className="overflow-hidden border border-border/70 bg-card/60">
-          <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
-            <span className="text-xs font-semibold text-muted-foreground">
-              JSON Data
-            </span>
-            <span className="font-mono text-xs text-muted-foreground/60">
-              json
-            </span>
-          </div>
+        <Card>
+          <CardHeader title="JSON Data" />
           <pre className="overflow-x-auto p-5 font-mono text-xs leading-relaxed sm:text-sm">
             <code>{JSON.stringify(data.data, null, 2)}</code>
           </pre>
-        </div>
+        </Card>
 
         {/* Actions */}
         <div className="mt-8 flex flex-wrap items-center justify-end gap-2">
-          <Link href={`/dashboard/new?edit=${data.id}`} className={outlineBtn}>
+          <ButtonLink
+            href={`/dashboard/new?edit=${data.id}`}
+            variant="outline"
+            className="text-muted-foreground"
+          >
             <HiOutlinePencil className="h-4 w-4" />
             Edit
-          </Link>
-          <button onClick={handleTogglePublish} className={outlineBtn}>
+          </ButtonLink>
+          <Button
+            variant="outline"
+            className="text-muted-foreground"
+            onClick={() => toggle({ published: !data.published })}
+          >
             {data.published ? (
               <HiOutlineEyeSlash className="h-4 w-4" />
             ) : (
               <HiOutlineEye className="h-4 w-4" />
             )}
             {data.published ? "Unpublish" : "Publish"}
-          </button>
-          <button
-            onClick={handleTogglePrivate}
-            className={`${outlineBtn} hover:border-amber-500/40 hover:text-amber-400`}
+          </Button>
+          <Button
+            variant="outline"
+            className="text-muted-foreground hover:border-amber-500/40 hover:text-amber-400"
+            onClick={() => toggle({ private: !data.private })}
           >
             {data.private ? (
               <HiOutlineLockOpen className="h-4 w-4" />
@@ -277,14 +211,15 @@ export default function ResourceDetailPage() {
               <HiOutlineLockClosed className="h-4 w-4" />
             )}
             {data.private ? "Make Public" : "Make Private"}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            className="text-red-500 hover:border-red-500/40 hover:text-red-400"
             onClick={handleDelete}
-            className={`${outlineBtn} hover:border-red-500/40 hover:text-red-400`}
           >
             <HiOutlineTrash className="h-4 w-4" />
             Delete
-          </button>
+          </Button>
         </div>
       </main>
     </div>

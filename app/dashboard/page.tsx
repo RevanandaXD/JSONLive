@@ -1,18 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  HiOutlinePlus,
-  HiOutlineMagnifyingGlass,
-  HiOutlineDocumentText,
-} from "react-icons/hi2";
-import { DashboardNav } from "@/components/ui/DashboardNav";
-import { ResourceCard } from "@/components/ui/ResourceCard";
+import { HiOutlinePlus, HiOutlineDocumentText } from "react-icons/hi2";
+import { DashboardNav } from "@/components/layout/DashboardNav";
+import { DashboardSkeleton } from "@/components/layout/DashboardSkeleton";
+import { ResourceCard } from "@/components/resources/ResourceCard";
+import { ButtonLink } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { api } from "@/src/lib/api";
 import useResource from "@/hooks/useResource";
 import { useSession } from "@/src/lib/auth-client";
+import { formatBytes } from "@/src/lib/format";
 import type { Resource } from "@/types/resource";
 import {
   DEFAULT_USERNAME,
@@ -20,13 +20,6 @@ import {
   PUBLIC_BASE_URL,
   STORAGE_LIMIT,
 } from "@/src/lib/config";
-import { Skeleton } from "@/components/ui/Skeleton";
-
-function formatBytes(bytes: number): string {
-  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${bytes} B`;
-}
 
 function UsageBlock({
   label,
@@ -93,7 +86,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen">
         <DashboardNav />
-        <Skeleton />
+        <DashboardSkeleton />
       </div>
     );
   }
@@ -177,15 +170,16 @@ export default function DashboardPage() {
                 Limit reached
               </span>
             )}
-            <Link
+            <ButtonLink
               href={atLimit ? "/dashboard" : "/dashboard/new"}
+              variant="primary"
               aria-disabled={atLimit}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-background transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+              className="gap-2 enabled:hover:bg-primary-hover"
             >
               <HiOutlinePlus className="h-4 w-4" />
               <span className="hidden sm:inline">New Resource</span>
               <span className="sm:hidden">New</span>
-            </Link>
+            </ButtonLink>
           </div>
         </div>
 
@@ -211,39 +205,33 @@ export default function DashboardPage() {
 
         {/* Search */}
         <div className="mb-6 max-w-md">
-          <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/60 px-3.5 py-2.5 transition-colors focus-within:border-primary/50">
-            <HiOutlineMagnifyingGlass className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search resources..."
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
-          </div>
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Search resources..."
+            ariaLabel="Search resources"
+          />
         </div>
 
         {/* Resource grid */}
         {filtered.length === 0 ? (
-          <div className="rounded-md border border-dashed border-border/80 bg-card/40 px-6 py-16 text-center">
-            <HiOutlineDocumentText className="mx-auto mb-4 h-10 w-10 text-muted-foreground/40" />
-            <h2 className="font-heading text-lg font-semibold">
-              {query ? "No results" : "No resources yet"}
-            </h2>
-            <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-              {query
+          <EmptyState
+            icon={HiOutlineDocumentText}
+            title={query ? "No results" : "No resources yet"}
+            description={
+              query
                 ? "Try a different keyword."
-                : "Create your first resource to get a public API endpoint."}
-            </p>
-            {!query && (
-              <Link
-                href="/dashboard/new"
-                className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-background hover:bg-primary-hover"
-              >
-                <HiOutlinePlus className="h-4 w-4" />
-                Create Resource
-              </Link>
-            )}
-          </div>
+                : "Create your first resource to get a public API endpoint."
+            }
+            action={
+              !query ? (
+                <ButtonLink href="/dashboard/new" variant="primary" size="sm">
+                  <HiOutlinePlus className="h-4 w-4" />
+                  Create Resource
+                </ButtonLink>
+              ) : null
+            }
+          />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((r) => (

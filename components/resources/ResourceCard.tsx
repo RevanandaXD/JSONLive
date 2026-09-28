@@ -10,11 +10,12 @@ import {
   HiOutlineLink,
   HiOutlineLockClosed,
   HiOutlineLockOpen,
-  HiEye,
   HiOutlineTrash,
 } from "react-icons/hi2";
-import { HiCheck } from "react-icons/hi";
+import { HiEye } from "react-icons/hi";
 import type { Resource } from "@/types/resource";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { timeAgo } from "@/src/lib/format";
 
 type Props = {
   resource: Resource;
@@ -27,18 +28,12 @@ type Props = {
 const menuBtn =
   "flex w-full items-center gap-2 rounded px-2.5 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground";
 
-function timeAgo(date: Date): string {
-  const diff = Date.now() - date.getTime();
-  const secs = Math.floor(diff / 1000);
-  if (secs < 60) return "just now";
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins} min ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} hr ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
-  return date.toLocaleDateString();
-}
+const statusStyles = {
+  draft: { badge: "bg-muted/60 text-muted-foreground", dot: "bg-muted-foreground", label: "Draft" },
+  private: { badge: "bg-amber-500/10 text-amber-400", dot: "bg-amber-400", label: "Private" },
+  public: { badge: "bg-primary/10 text-primary", dot: "bg-primary", label: "Published" },
+} as const;
+
 
 export function ResourceCard({
   resource: r,
@@ -48,7 +43,6 @@ export function ResourceCard({
   onDelete,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,31 +66,8 @@ export function ResourceCard({
   }, [menuOpen]);
 
   const type = Array.isArray(r.data) ? "collection" : "object";
-
   const status = !r.published ? "draft" : r.private ? "private" : "public";
-  const badgeClass = {
-    draft: "bg-muted/60 text-muted-foreground",
-    private: "bg-amber-500/10 text-amber-400",
-    public: "bg-primary/10 text-primary",
-  }[status];
-  const dotClass = {
-    draft: "bg-muted-foreground",
-    private: "bg-amber-400",
-    public: "bg-primary",
-  }[status];
-  const label = { draft: "Draft", private: "Private", public: "Published" }[
-    status
-  ];
-
-  const copyEndpoint = async () => {
-    try {
-      await navigator.clipboard.writeText(endpoint);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard unavailable */
-    }
-  };
+  const { badge, dot, label } = statusStyles[status];
 
   return (
     <main className="flex flex-col rounded-md border border-border/70 bg-card/60 p-4 transition-colors hover:border-primary/40 hover:bg-card sm:p-5">
@@ -106,14 +77,14 @@ export function ResourceCard({
           <h3 className="truncate font-heading font-semibold leading-tight text-foreground">
             {r.name}
           </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground capitalize">
+          <p className="mt-0.5 text-xs capitalize text-muted-foreground">
             {type}
           </p>
         </div>
         <span
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded px-2 py-0.5 text-[11px] font-semibold ${badgeClass}`}
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded px-2 py-0.5 text-[11px] font-semibold ${badge}`}
         >
-          <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
+          <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
           {label}
         </span>
       </div>
@@ -142,7 +113,7 @@ export function ResourceCard({
           <Link
             href={`/resources/${r.id}`}
             onClick={() => setMenuOpen(false)}
-            className="inline-flex py-2 px-3 justify-center rounded border border-border text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground items-center gap-2 text-xs"
+            className="inline-flex items-center gap-2 rounded border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground"
           >
             <HiEye className="h-4 w-4" />
             View
@@ -168,19 +139,12 @@ export function ResourceCard({
                 <HiOutlineArrowTopRightOnSquare className="h-4 w-4" />
                 Open
               </a>
-              <button onClick={copyEndpoint} className={menuBtn}>
-                {copied ? (
-                  <>
-                    <HiCheck className="h-4 w-4 text-primary" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <HiOutlineLink className="h-4 w-4" />
-                    Copy URL
-                  </>
-                )}
-              </button>
+              <CopyButton
+                value={endpoint}
+                label="Copy URL"
+                ariaLabel={`Copy endpoint for ${r.name}`}
+                className="w-full justify-start border-transparent px-2.5 py-2 text-sm font-medium hover:bg-muted/60"
+              />
               <button
                 onClick={() => {
                   onTogglePublish(r);

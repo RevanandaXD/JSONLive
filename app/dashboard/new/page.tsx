@@ -1,17 +1,25 @@
 "use client";
 
-import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
-import { HiOutlineArrowLeft, HiOutlineClipboard, HiOutlineSparkles } from "react-icons/hi2";
-import { HiCheck, HiX } from "react-icons/hi";
-import { DashboardNav } from "@/components/ui/DashboardNav";
-import { FormatJSON } from "./format";
 import { useRouter, useSearchParams } from "next/navigation";
+import { HiOutlineArrowLeft, HiOutlineSparkles } from "react-icons/hi2";
+import { HiCheck, HiX } from "react-icons/hi";
+import { DashboardNav } from "@/components/layout/DashboardNav";
+import { Alert } from "@/components/ui/Alert";
+import { Badge } from "@/components/ui/Badge";
+import { Button, ButtonLink } from "@/components/ui/Button";
+import { Card, CardBody, CardFooter, CardHeader } from "@/components/ui/Card";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { Field, TextInput } from "@/components/ui/Input";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Switch } from "@/components/ui/Switch";
 import { useCreateResources } from "@/hooks/useCreateResource";
 import { api } from "@/src/lib/api";
 import { useSession } from "@/src/lib/auth-client";
 import { DEFAULT_USERNAME, PUBLIC_BASE_URL } from "@/src/lib/config";
+import { formatBytes, slugify } from "@/src/lib/format";
 import type { Resource } from "@/types/resource";
+import { FormatJSON } from "./format";
 
 type EditorStatus = "valid" | "invalid" | "empty";
 
@@ -31,9 +39,6 @@ function parseJson(value: string): { ok: boolean; error?: string } {
     return { ok: false, error: "Invalid JSON" };
   }
 }
-
-const fieldClass =
-  "w-full rounded-none border border-border/70 bg-background px-4 py-2.5 text-sm outline-none transition-colors focus:border-primary/50";
 
 function CreateResourcePage() {
   const searchParams = useSearchParams();
@@ -85,30 +90,13 @@ function CreateResourcePage() {
       ? "valid"
       : "invalid";
 
-  const handleFormat = () => {
+  const format = (indent: number) => {
     if (!parsed.ok) {
       setTouched(true);
       return;
     }
-    setData(JSON.stringify(JSON.parse(data), null, 2));
+    setData(JSON.stringify(JSON.parse(data), null, indent));
     setTouched(false);
-  };
-
-  const handleMinify = () => {
-    if (!parsed.ok) {
-      setTouched(true);
-      return;
-    }
-    setData(JSON.stringify(JSON.parse(data)));
-    setTouched(false);
-  };
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(data);
-    } catch {
-      /* clipboard unavailable */
-    }
   };
 
   const handleSubmit = async () => {
@@ -133,9 +121,10 @@ function CreateResourcePage() {
       }
       router.push("/dashboard");
     } catch (err: unknown) {
-      const status = (err as { status?: number })?.status;
-      const message = (err as { message?: string })?.message || "Failed to save resource";
-      if (status === 401 || message?.includes("401")) {
+      const errStatus = (err as { status?: number })?.status;
+      const message =
+        (err as { message?: string })?.message || "Failed to save resource";
+      if (errStatus === 401 || message?.includes("401")) {
         router.push("/login");
       } else {
         setErrorMessage(message);
@@ -143,11 +132,7 @@ function CreateResourcePage() {
     }
   };
 
-  const slug = name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
+  const slug = slugify(name);
 
   return (
     <div className="min-h-screen">
@@ -155,160 +140,120 @@ function CreateResourcePage() {
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
         {/* Heading */}
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="mb-0.5 font-heading text-2xl font-bold tracking-tight">
-                {editId ? "Edit Resource" : "Create Resource"}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {editId
-                  ? "Update your JSON, then the endpoint serves the latest version."
-                  : "Paste your JSON and get a public API endpoint."}
-              </p>
-            </div>
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="mb-0.5 font-heading text-2xl font-bold tracking-tight text-foreground">
+              {editId ? "Edit Resource" : "Create Resource"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {editId
+                ? "Update your JSON, then the endpoint serves the latest version."
+                : "Paste your JSON and get a public API endpoint."}
+            </p>
           </div>
 
-          <Link
+          <ButtonLink
             href="/dashboard"
-            className="hidden items-center gap-1.5 border border-border px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground sm:inline-flex"
+            variant="outline"
+            className="hidden text-muted-foreground sm:inline-flex"
           >
             <HiOutlineArrowLeft className="h-4 w-4" />
             Back to Dashboard
-          </Link>
+          </ButtonLink>
         </div>
 
         {loading ? (
-          <div className="h-64 animate-pulse border border-border/70 bg-card/60" />
+          <Skeleton className="h-64 w-full" />
         ) : (
           <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
             {/* Settings column */}
-            <div className="h-fit overflow-hidden border border-border/70 bg-card/60">
-              <div className="border-b border-border/60 px-5 py-3">
-                <h2 className="text-sm font-semibold">Settings</h2>
-              </div>
-              <div className="flex flex-col gap-5 p-5">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold">
-                    Resource name
-                  </label>
-                  <input
+            <Card className="h-fit">
+              <CardHeader title="Settings" />
+              <CardBody className="flex flex-col gap-5 p-5">
+                <Field label="Resource name" htmlFor="resource-name">
+                  <TextInput
+                    id="resource-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. users"
-                    className={fieldClass}
                   />
                   {slug && (
-                    <p className="mt-2 truncate border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground">
+                    <p className="mt-2 truncate rounded-md border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground">
                       {PUBLIC_BASE_URL}/api/{username}/{slug}
                     </p>
                   )}
-                </div>
+                </Field>
 
-                <div>
-                  <label className="mb-2 flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold">
-                      Publish to public API
-                    </span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={published}
-                      onClick={() => setPublished((p) => !p)}
-                      className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-                        published ? "bg-primary" : "bg-border"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${
-                          published ? "left-4.5" : "left-0.5"
-                        }`}
-                      />
-                    </button>
-                  </label>
-                  <p className="text-xs text-muted-foreground">
-                    {published
+                <Switch
+                  label="Publish to public API"
+                  checked={published}
+                  onChange={setPublished}
+                  hint={
+                    published
                       ? "Anyone can GET this endpoint on /public."
-                      : "Kept private until you publish it from the dashboard."}
-                  </p>
-                </div>
+                      : "Kept private until you publish it from the dashboard."
+                  }
+                />
 
-                <div>
-                  <label className="mb-2 flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold">
-                      Require authentication
-                    </span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={isPrivate}
-                      onClick={() => setIsPrivate((p) => !p)}
-                      className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-                        isPrivate ? "bg-amber-500" : "bg-border"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${
-                          isPrivate ? "left-[18px]" : "left-0.5"
-                        }`}
-                      />
-                    </button>
-                  </label>
-                  <p className="text-xs text-muted-foreground">
-                    {isPrivate
+                <Switch
+                  label="Require authentication"
+                  tone="amber"
+                  checked={isPrivate}
+                  onChange={setIsPrivate}
+                  hint={
+                    isPrivate
                       ? "Only the resource owner can GET this endpoint."
-                      : "Anyone can GET this endpoint without login."}
-                  </p>
-                </div>
+                      : "Anyone can GET this endpoint without login."
+                  }
+                />
 
                 <div className="flex flex-col gap-2">
-                  <button
-                    onClick={handleFormat}
-                    className="inline-flex items-center justify-center gap-2 border border-primary bg-primary px-4 py-2.5 text-sm font-bold text-background transition-colors hover:bg-primary-hover"
-                  >
+                  <Button variant="primary" onClick={() => format(2)}>
                     <HiOutlineSparkles className="h-4 w-4" />
                     Format JSON
-                  </button>
-                  <button
-                    onClick={handleMinify}
-                    className="inline-flex items-center justify-center gap-2 border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground"
-                  >
+                  </Button>
+                  <Button variant="outline" onClick={() => format(0)}>
                     Minify
-                  </button>
-                  <button
-                    onClick={handleCopy}
-                    className="inline-flex items-center justify-center gap-2 border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground"
-                  >
-                    <HiOutlineClipboard className="h-4 w-4" />
-                    Copy JSON
-                  </button>
+                  </Button>
+                  <CopyButton
+                    value={data}
+                    label="Copy JSON"
+                    ariaLabel="Copy JSON to clipboard"
+                    className="w-full px-4 py-2.5 text-sm"
+                  />
                 </div>
-              </div>
-            </div>
+              </CardBody>
+            </Card>
 
             {/* Editor column */}
-            <div className="overflow-hidden border border-border/70 bg-card">
-              <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-                <span className="text-sm font-semibold">JSON Data</span>
-                {touched && status === "invalid" && (
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-red-400">
-                    <HiX className="h-4 w-4" />
-                    Invalid JSON
-                  </span>
-                )}
-                {status === "valid" && (
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-green-400">
-                    <HiCheck className="h-4 w-4" />
-                    Valid JSON
-                  </span>
-                )}
-                {(isError || errorMessage) && (
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-red-400">
-                    <HiX className="h-4 w-4" />
-                    {errorMessage || "Failed to save"}
-                  </span>
-                )}
+            <Card>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
+                <h2 className="text-sm font-semibold text-foreground">
+                  JSON Data
+                </h2>
+                <div className="flex items-center gap-2">
+                  {touched && status === "invalid" && (
+                    <Badge tone="red" className="gap-1 font-sans">
+                      <HiX className="h-3.5 w-3.5" />
+                      Invalid JSON
+                    </Badge>
+                  )}
+                  {status === "valid" && (
+                    <Badge tone="emerald" className="gap-1 font-sans">
+                      <HiCheck className="h-3.5 w-3.5" />
+                      Valid JSON
+                    </Badge>
+                  )}
+                </div>
               </div>
+
+              {isError || errorMessage ? (
+                <div className="p-4">
+                  <Alert tone="danger" icon={HiX} title="Save failed">
+                    {errorMessage || "Failed to save resource"}
+                  </Alert>
+                </div>
+              ) : null}
 
               <FormatJSON
                 value={data}
@@ -320,23 +265,23 @@ function CreateResourcePage() {
                 invalid={status === "invalid"}
               />
 
-              <div className="flex items-center justify-between border-t border-border/60 px-4 py-3">
+              <CardFooter className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">
-                  {data ? new Blob([data]).size.toLocaleString() : 0} bytes
+                  {formatBytes(new Blob([data]).size)}
                 </span>
-                <button
+                <Button
+                  variant="primary"
                   disabled={!valid || isPending}
                   onClick={handleSubmit}
-                  className="inline-flex items-center gap-2 border border-primary bg-primary px-5 py-2 text-sm font-bold text-background transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {isPending
                     ? "Saving..."
                     : editId
                       ? "Save Changes"
                       : "Create Resource"}
-                </button>
-              </div>
-            </div>
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
         )}
       </main>

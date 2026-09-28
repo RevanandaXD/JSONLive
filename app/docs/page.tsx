@@ -1,7 +1,21 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { DashboardNav } from "@/components/ui/DashboardNav";
+import { DashboardNav } from "@/components/layout/DashboardNav";
+import { MethodBadge } from "@/components/ui/Badge";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { Tabs } from "@/components/ui/Tabs";
 import { LIMITS, MAX_API_KEYS, RATE_LIMIT } from "@/src/lib/config";
+import {
+  BEHAVIOR_NOTES,
+  COLLECTION_ENDPOINTS,
+  CONSUME_EXAMPLE,
+  EXAMPLES,
+  HOST,
+  ITEM_ENDPOINTS,
+  SAMPLE_DATA,
+  STATUS_CODES,
+  type Endpoint,
+} from "@/src/lib/docs";
 
 export const metadata: Metadata = {
   title: "API Docs | JSONLive",
@@ -9,230 +23,13 @@ export const metadata: Metadata = {
     "REST API reference for JSONLive resources — read, create, replace, update, and delete JSON over plain HTTP.",
 };
 
-const HOST = "https://jsonlive.example";
-
-const methodTone: Record<string, string> = {
-  GET: "bg-emerald-500/15 text-emerald-400",
-  POST: "bg-sky-500/15 text-sky-400",
-  PUT: "bg-amber-500/15 text-amber-400",
-  PATCH: "bg-violet-500/15 text-violet-400",
-  DELETE: "bg-red-500/15 text-red-400",
-  OPTIONS: "bg-muted text-muted-foreground",
-};
-
-type Endpoint = {
-  method: string;
-  path: string;
-  desc: string;
-  status: string;
-};
-
-const collectionEndpoints: Endpoint[] = [
-  {
-    method: "GET",
-    path: "/api/:username/:resource",
-    desc: "Read the resource. Objects are returned as-is, arrays return every item.",
-    status: "200 / 401 / 404",
-  },
-  {
-    method: "POST",
-    path: "/api/:username/:resource",
-    desc: "Append an item to an array resource. Generates an id when the body omits one.",
-    status: "201 / 400 / 401",
-  },
-  {
-    method: "PUT",
-    path: "/api/:username/:resource",
-    desc: "Replace the whole collection with the array sent in the body.",
-    status: "200 / 400 / 401",
-  },
-  {
-    method: "OPTIONS",
-    path: "/api/:username/:resource",
-    desc: "CORS preflight for browser clients.",
-    status: "204",
-  },
-];
-
-const itemEndpoints: Endpoint[] = [
-  {
-    method: "GET",
-    path: "/api/:username/:resource/:id",
-    desc: "Read one item by its id field.",
-    status: "200 / 400 / 404",
-  },
-  {
-    method: "PUT",
-    path: "/api/:username/:resource/:id",
-    desc: "Replace one item. Fields absent from the body are removed.",
-    status: "200 / 400 / 404",
-  },
-  {
-    method: "PATCH",
-    path: "/api/:username/:resource/:id",
-    desc: "Merge fields into one item. Only the sent keys change.",
-    status: "200 / 400 / 404",
-  },
-  {
-    method: "DELETE",
-    path: "/api/:username/:resource/:id",
-    desc: "Remove one item from the collection.",
-    status: "200 / 400 / 404",
-  },
-  {
-    method: "OPTIONS",
-    path: "/api/:username/:resource/:id",
-    desc: "CORS preflight for browser clients.",
-    status: "204",
-  },
-];
-
-const readExample = `// Read the whole collection — no authentication required
-const res = await fetch("${HOST}/api/revan/users");
-const users = await res.json();
-
-// Read a single item
-const one = await fetch("${HOST}/api/revan/users/1").then((r) => r.json());`;
-
-const createExample = `// Create an item. "id" is generated when it is not sent.
-const res = await fetch("${HOST}/api/revan/users", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "x-api-key": "jlv_...",
-  },
-  body: JSON.stringify({ name: "Budi", role: "Designer" }),
-});
-
-const created = await res.json(); // 201, includes the generated id`;
-
-const patchExample = `// Merge fields into an item (PATCH keeps the other fields intact)
-await fetch("${HOST}/api/revan/users/1", {
-  method: "PATCH",
-  headers: {
-    "Content-Type": "application/json",
-    "x-api-key": "jlv_...",
-  },
-  body: JSON.stringify({ role: "Senior Developer" }),
-});
-
-// Replace an item (PUT drops every field that is not sent)
-await fetch("${HOST}/api/revan/users/1", {
-  method: "PUT",
-  headers: {
-    "Content-Type": "application/json",
-    "x-api-key": "jlv_...",
-  },
-  body: JSON.stringify({ name: "Revan", role: "Developer" }),
-});`;
-
-const replaceExample = `// Replace the whole collection in one call
-await fetch("${HOST}/api/revan/users", {
-  method: "PUT",
-  headers: {
-    "Content-Type": "application/json",
-    "x-api-key": "jlv_...",
-  },
-  body: JSON.stringify([
-    { id: 1, name: "Revan" },
-    { id: 2, name: "Budi" },
-  ]),
-});`;
-
-const deleteExample = `// Delete one item
-const res = await fetch("${HOST}/api/revan/users/1", {
-  method: "DELETE",
-  headers: { "x-api-key": "jlv_..." },
-});
-
-const result = await res.json(); // { "success": true }`;
-
-const notes = [
-  "Only published resources are reachable. Unpublished ones answer with 404.",
-  "A private resource only serves GET to its owner session. Public data needs no login at all.",
-  "Item routes (:id) require an array resource whose entries carry an id field.",
-  "POST and PUT on a collection require an array body; POST and PUT on an item require an object body.",
-  "POST generates the next numeric id, or a UUID when the collection has no numeric ids.",
-  "Every public response ships Access-Control-Allow-Origin: * so browsers can call it from any origin.",
-];
-
-const statuses = [
-  { code: "200 OK", desc: "Request succeeded." },
-  { code: "201 Created", desc: "POST created a new item." },
-  { code: "204 No Content", desc: "OPTIONS preflight succeeded." },
-  { code: "400 Bad Request", desc: "Malformed JSON, or a body shape the route does not accept." },
-  { code: "401 Unauthorized", desc: "Write request without a valid API key, or GET on a private resource." },
-  { code: "404 Not Found", desc: "Unknown username, resource, or item id." },
-  { code: "429 Too Many Requests", desc: "Rate limit reached. See the Retry-After header." },
-];
-
-const limits = [
+const LIMITS_LIST = [
   { label: "Read requests", value: `${RATE_LIMIT.GET.limit} / minute` },
   { label: "Write requests", value: `${RATE_LIMIT.WRITE.limit} / minute` },
   { label: "JSON per resource", value: `${(LIMITS.MAX_JSON_SIZE / (1024 * 1024)).toFixed(0)} MB` },
   { label: "Resources per user", value: `${LIMITS.MAX_RESOURCES}` },
   { label: "API keys per user", value: `${MAX_API_KEYS}` },
 ];
-
-function MethodBadge({ method }: { method: string }) {
-  return (
-    <span
-      className={`shrink-0 rounded-md px-2 py-1 font-mono text-xs font-bold ${methodTone[method]}`}
-    >
-      {method}
-    </span>
-  );
-}
-
-function EndpointList({ items }: { items: Endpoint[] }) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-border/70 bg-card/60">
-      {items.map((e, i) => (
-        <div
-          key={`${e.method}-${e.path}`}
-          className={`px-5 py-4 ${i === items.length - 1 ? "" : "border-b border-border/60"}`}
-        >
-          <div className="flex items-start gap-3">
-            <MethodBadge method={e.method} />
-            <code className="min-w-0 flex-1 break-all font-mono text-sm text-foreground">
-              {e.path}
-            </code>
-            <span className="shrink-0 font-mono text-xs text-muted-foreground/60">
-              {e.status}
-            </span>
-          </div>
-          <p className="mt-2 pl-0.5 text-sm text-muted-foreground sm:pl-[3.75rem]">
-            {e.desc}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ExampleBlock({
-  title,
-  language,
-  code,
-}: {
-  title: string;
-  language: string;
-  code: string;
-}) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-border/70 bg-card/60">
-      <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
-        <span className="text-sm font-semibold">{title}</span>
-        <span className="font-mono text-xs text-muted-foreground/60">
-          {language}
-        </span>
-      </div>
-      <pre className="overflow-x-auto p-5 font-mono text-xs leading-relaxed sm:text-sm">
-        <code>{code}</code>
-      </pre>
-    </div>
-  );
-}
 
 function Section({
   id,
@@ -253,13 +50,85 @@ function Section({
   );
 }
 
+function CodeBlock({ code, muted = false }: { code: string; muted?: boolean }) {
+  return (
+    <pre
+      className={`overflow-x-auto p-4 font-mono text-xs leading-relaxed sm:text-[13px] ${
+        muted ? "text-muted-foreground" : "text-foreground"
+      }`}
+    >
+      <code>{code}</code>
+    </pre>
+  );
+}
+
+function CodePanel({ code }: { code: string }) {
+  return (
+    <>
+      <div className="flex justify-end border-b border-border/60 px-3 py-2">
+        <CopyButton
+          value={code}
+          ariaLabel="Copy code"
+          className="px-2 py-1.5"
+        />
+      </div>
+      <CodeBlock code={code} />
+    </>
+  );
+}
+
+function Panel({ children }: { children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border/70 bg-card/60">
+      {children}
+    </div>
+  );
+}
+
+function PanelHeader({ title, action }: { title: string; action?: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-border/60 px-5 py-3">
+      <span className="text-sm font-semibold text-foreground">{title}</span>
+      {action}
+    </div>
+  );
+}
+
+function EndpointList({ items }: { items: Endpoint[] }) {
+  return (
+    <Panel>
+      {items.map((endpoint, i) => (
+        <div
+          key={`${endpoint.method}-${endpoint.path}`}
+          className={`px-5 py-4 ${
+            i === items.length - 1 ? "" : "border-b border-border/60"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <MethodBadge method={endpoint.method} />
+            <code className="min-w-0 flex-1 break-all font-mono text-sm text-foreground">
+              {endpoint.path}
+            </code>
+            <span className="shrink-0 font-mono text-xs text-muted-foreground/60">
+              {endpoint.status}
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground sm:pl-[3.75rem]">
+            {endpoint.desc}
+          </p>
+        </div>
+      ))}
+    </Panel>
+  );
+}
+
 export default function DocsPage() {
   return (
     <div className="min-h-screen">
       <DashboardNav />
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mb-10">
+        <header className="mb-10">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary">
             API Docs
           </p>
@@ -272,7 +141,7 @@ export default function DocsPage() {
             key — so the same URL can be both a read-only mock and a working
             CRUD backend for testing.
           </p>
-        </div>
+        </header>
 
         <div className="mb-10 grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-border/70 bg-card/60 p-5">
@@ -316,48 +185,137 @@ export default function DocsPage() {
               Collection routes act on the whole resource: read everything,
               append an item, or overwrite the entire dataset.
             </p>
-            <EndpointList items={collectionEndpoints} />
+            <EndpointList items={COLLECTION_ENDPOINTS} />
           </Section>
 
           <Section id="items" title="Item routes">
             <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
               Item routes act on a single entry inside an array resource,
-              addressed by the entry&apos;s <code className="font-mono text-primary">id</code>{" "}
-              field.
+              addressed by the entry&apos;s{" "}
+              <code className="font-mono text-primary">id</code> field.
             </p>
-            <EndpointList items={itemEndpoints} />
+            <EndpointList items={ITEM_ENDPOINTS} />
           </Section>
 
           <Section id="examples" title="Examples">
+            <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+              Follow the steps in order — each one builds on the data left by
+              the previous one. Steps 1 and 2 need no key, the rest need an API
+              key from Settings.
+            </p>
+
             <div className="space-y-4">
-              <ExampleBlock title="Read" language="javascript" code={readExample} />
-              <ExampleBlock
-                title="Create"
-                language="javascript"
-                code={createExample}
-              />
-              <ExampleBlock
-                title="Update"
-                language="javascript"
-                code={patchExample}
-              />
-              <ExampleBlock
-                title="Replace a collection"
-                language="javascript"
-                code={replaceExample}
-              />
-              <ExampleBlock
-                title="Delete"
-                language="javascript"
-                code={deleteExample}
-              />
+              {/* Sample data every example refers to */}
+              <Panel>
+                <PanelHeader title="The resource used below" />
+                <div className="px-5 py-4">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Every example acts on one resource:{" "}
+                    <code className="font-mono text-foreground">users</code>,
+                    owned by user{" "}
+                    <code className="font-mono text-foreground">revan</code>,
+                    holding these two entries.
+                  </p>
+                </div>
+                <CodeBlock code={SAMPLE_DATA} />
+                <p className="border-t border-border/60 px-4 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                  Copy the JSON above into a new resource named{" "}
+                  <code className="font-mono text-primary">users</code> and
+                  publish it — then every request on this page works as written.
+                </p>
+              </Panel>
+
+              <div className="grid items-start gap-4 md:grid-cols-2">
+                {EXAMPLES.map((example) => (
+                  <article
+                    key={example.step}
+                    className="overflow-hidden rounded-xl border border-border/70 bg-card/60"
+                  >
+                    <div className="border-b border-border/60 px-5 py-4">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                          {example.step}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-semibold text-foreground">
+                            {example.title}
+                          </h3>
+                          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                            {example.summary}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2 pl-9">
+                        <MethodBadge method={example.method} />
+                        <code className="min-w-0 flex-1 break-all font-mono text-xs text-foreground sm:text-sm">
+                          {example.path}
+                        </code>
+                      </div>
+
+                      {example.note && (
+                        <p className="mt-2.5 pl-9 text-xs leading-relaxed text-primary">
+                          {example.note}
+                        </p>
+                      )}
+                    </div>
+
+                    <Tabs
+                      items={[
+                        {
+                          value: "curl",
+                          label: "cURL",
+                          content: <CodePanel code={example.curl} />,
+                        },
+                        {
+                          value: "js",
+                          label: "JavaScript",
+                          content: <CodePanel code={example.js} />,
+                        },
+                      ]}
+                    />
+
+                    <div className="border-t border-border/60 bg-muted/20">
+                      <div className="flex items-center gap-2 px-4 py-2">
+                        <span className="font-mono text-xs font-semibold text-foreground">
+                          {example.status}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Response
+                        </span>
+                      </div>
+                      <CodeBlock code={example.response} muted />
+                    </div>
+
+                    {example.result && (
+                      <p className="border-t border-border/60 px-4 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                        {example.result}
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+
+              <Panel>
+                <PanelHeader title="Use it in your app" />
+                <div className="px-5 py-4">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    The endpoint is a normal URL, so any HTTP client works —
+                    fetch, axios, Postman, or curl. No SDK, no CORS setup.
+                  </p>
+                </div>
+                <CodeBlock code={CONSUME_EXAMPLE} />
+              </Panel>
             </div>
           </Section>
 
           <Section id="notes" title="Behavior notes">
             <ul className="space-y-2.5">
-              {notes.map((note) => (
-                <li key={note} className="flex gap-3 text-sm text-muted-foreground">
+              {BEHAVIOR_NOTES.map((note) => (
+                <li
+                  key={note}
+                  className="flex gap-3 text-sm text-muted-foreground"
+                >
                   <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" />
                   {note}
                 </li>
@@ -367,21 +325,23 @@ export default function DocsPage() {
 
           <Section id="limits" title="Limits">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {limits.map((l) => (
+              {LIMITS_LIST.map((limit) => (
                 <div
-                  key={l.label}
+                  key={limit.label}
                   className="rounded-xl border border-border/70 bg-card/60 p-5"
                 >
-                  <p className="text-xs text-muted-foreground">{l.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {limit.label}
+                  </p>
                   <p className="mt-1 font-mono text-sm font-semibold text-foreground">
-                    {l.value}
+                    {limit.value}
                   </p>
                 </div>
               ))}
             </div>
             <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-              Rate limits are enforced per IP address on a rolling window. When a
-              limit is hit the API answers{" "}
+              Rate limits are enforced per IP address on a rolling window. When
+              a limit is hit the API answers{" "}
               <code className="font-mono text-primary">429</code> and includes a{" "}
               <code className="font-mono text-primary">Retry-After</code> header
               with the number of seconds to wait.
@@ -389,21 +349,25 @@ export default function DocsPage() {
           </Section>
 
           <Section id="status-codes" title="Status codes">
-            <div className="overflow-hidden rounded-xl border border-border/70 bg-card/60">
-              {statuses.map((s, i) => (
+            <Panel>
+              {STATUS_CODES.map((status, i) => (
                 <div
-                  key={s.code}
+                  key={status.code}
                   className={`flex flex-col gap-1 px-5 py-3.5 sm:flex-row sm:items-center sm:gap-6 ${
-                    i === statuses.length - 1 ? "" : "border-b border-border/60"
+                    i === STATUS_CODES.length - 1
+                      ? ""
+                      : "border-b border-border/60"
                   }`}
                 >
                   <code className="w-44 shrink-0 font-mono text-xs font-semibold text-foreground">
-                    {s.code}
+                    {status.code}
                   </code>
-                  <span className="text-sm text-muted-foreground">{s.desc}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {status.desc}
+                  </span>
                 </div>
               ))}
-            </div>
+            </Panel>
           </Section>
         </div>
       </main>

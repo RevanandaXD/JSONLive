@@ -1,7 +1,7 @@
 import prisma from "@/src/lib/prisma";
 import { PUBLIC_BASE_URL } from "@/src/lib/config";
-import { PublicGrid, type PublicRow } from "@/components/ui/PublicGrid";
-import { DashboardNav } from "@/components/ui/DashboardNav";
+import { PublicGrid, type PublicRow } from "@/components/resources/PublicGrid";
+import { DashboardNav } from "@/components/layout/DashboardNav";
 
 export const metadata = {
   title: "Public APIs | JSONLive",

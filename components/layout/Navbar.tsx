@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
 import { Logo } from "./Logo";
+import { useSession } from "@/src/lib/auth-client";
 
 const navLinks = [
   { name: "Features", route: "#features" },
@@ -12,6 +13,8 @@ const navLinks = [
 
 export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data } = useSession();
+  const isLoggedIn = !!data?.user;
 
   const closeMenu = () => setMobileOpen(false);
 
@@ -20,7 +23,7 @@ export const Navbar = () => {
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
           {/* Logo */}
-          <Logo className="text-lg" />
+          <Logo href={isLoggedIn ? "/dashboard" : "/"} className="text-lg" />
 
           {/* Desktop Links */}
           <div className="hidden items-center gap-1 md:flex">

@@ -13,7 +13,7 @@ import {
 } from "react-icons/hi2";
 import { HiMenu, HiX } from "react-icons/hi";
 import { Logo } from "./Logo";
-import { LoginButton } from "./LoginButton";
+import { ButtonLink } from "@/components/ui/Button";
 import { UseUIStore } from "@/stores/ui-store";
 import { useSession, signOut } from "@/src/lib/auth-client";
 
@@ -87,7 +87,7 @@ export const DashboardNav = ({
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Logo />
+        <Logo href={isLoggedIn ? "/dashboard" : "/"} />
 
         <div className="flex items-center gap-3">
           {/* Logged-in: user dropdown */}
@@ -170,7 +170,17 @@ export const DashboardNav = ({
                     </Link>
                   );
                 })}
-                {loginOnly && <LoginButton className="ml-2" />}
+                {loginOnly && !isPending && (
+                  <ButtonLink
+                    href="/login"
+                    variant="primary"
+                    size="sm"
+                    className="ml-2"
+                  >
+                    Log in
+                  </ButtonLink>
+                )}
+
               </nav>
             )
           )}
@@ -272,7 +282,12 @@ export const DashboardNav = ({
                         );
                       })}
                     </nav>
-                    {loginOnly && <LoginButton className="mt-1" />}
+                    {loginOnly && !isPending && (
+                      <ButtonLink href="/login" variant="primary" size="sm" className="mt-1">
+                        Log in
+                      </ButtonLink>
+                    )}
+
                   </>
                 )
               )}
