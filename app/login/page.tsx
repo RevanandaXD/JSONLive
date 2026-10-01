@@ -3,12 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { HiOutlineUser } from "react-icons/hi2";
+import { HiOutlineUser, HiLockClosed } from "react-icons/hi2";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Field, PasswordInput, TextInput } from "@/components/ui/Input";
-import { signIn } from "@/src/lib/auth-client";
+import { signIn, useSession } from "@/src/lib/auth-client";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -37,9 +37,14 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const callbackURL =
+      const { data } = useSession();
+      let callbackURL =
         new URLSearchParams(window.location.search).get("callbackURL") ||
         "/dashboard";
+      
+      if (data?.user.role === 'admin') {
+        callbackURL = "/admin"
+      }
 
       const { error: resError } = await signIn.email({
         email,
@@ -94,6 +99,7 @@ export default function LoginPage() {
         <Field label="Password" htmlFor="password">
           <PasswordInput
             id="password"
+            icon={HiLockClosed}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"

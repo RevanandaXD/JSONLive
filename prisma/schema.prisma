@@ -11,6 +11,8 @@ model User {
   name             String
   email            String     @unique
   emailVerified    Boolean    @default(false)
+  role             String
+  maxResource      Int        @default(5)
   image            String?
   username         String?    @unique
   createdAt        DateTime   @default(now())

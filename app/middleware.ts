@@ -1,22 +1,45 @@
-import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/src/lib/auth";
 
-export function middleware(request: NextRequest) {
-    const session = request.cookies.get("better-auth.session_token");
+const PROTECTED_PREFIXES = ["/dashboard", "/settings", "/resources"];
+const AUTH_PAGES = ["/login", "/register"];
 
-    const isProtected = request.nextUrl.pathname.startsWith('/dashboard');
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
 
-    if (isProtected && !session) {
-        return NextResponse.redirect(new URL("/login", request.url));
-    }
+  const session = await auth.api.getSession({ headers: request.headers });
+  const role = session?.user.role;
 
-    if (request.nextUrl.pathname === '/login' && session) {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
+  const isAdmin = pathname.startsWith("/admin");
+  const isProtected =
+    PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix)) || isAdmin;
+  const isAuthPage = AUTH_PAGES.includes(pathname);
 
-    return NextResponse.next()
+  if (isProtected && !session) {
+    const url = new URL("/login", request.url);
+    url.searchParams.set("callbackURL", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  if (isAdmin && role !== "admin") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  if (isAuthPage && session) {
+    const destination = role === "admin" ? "/admin" : "/dashboard";
+    return NextResponse.redirect(new URL(destination, request.url));
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/login']
-}
+  matcher: [
+    "/dashboard/:path*",
+    "/settings/:path*",
+    "/resources/:path*",
+    "/admin/:path*",
+    "/login",
+    "/register",
+  ],
+};

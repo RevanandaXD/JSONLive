@@ -10,14 +10,23 @@ const prisma = new PrismaClient({
 
 const USERS = [
   {
+    email: "admin@jsonlive.com",
+    name: "admin",
+    role: "admin",
+    username: "admin",
+    password: "password123"
+  },
+  {
     email: "demo@jsonlive.com",
     name: "Revan",
+    role: "user",
     username: "revan",
     password: "password123",
   },
   {
     email: "budi@jsonlive.com",
     name: "Budi",
+    role: "user",
     username: "budi",
     password: "password123",
   },
@@ -66,11 +75,13 @@ async function main() {
       update: {
         name: userData.name,
         username: userData.username,
+        role: userData.role,
         emailVerified: true,
       },
       create: {
         email: userData.email,
         name: userData.name,
+        role: userData.role,
         emailVerified: true,
         username: userData.username,
       },
