@@ -12,8 +12,19 @@ import { signIn, useSession } from "@/src/lib/auth-client";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function resolveCallbackURL(raw: string | null, role: string | null | undefined) {
+  if (role === "admin") return "/admin";
+
+  if (raw && raw.startsWith("/") && !raw.startsWith("//")) {
+    return raw;
+  }
+
+  return "/dashboard";
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const { data } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,14 +48,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { data } = useSession();
-      let callbackURL =
-        new URLSearchParams(window.location.search).get("callbackURL") ||
-        "/dashboard";
-      
-      if (data?.user.role === 'admin') {
-        callbackURL = "/admin"
-      }
+      const callbackURL = resolveCallbackURL(
+        new URLSearchParams(window.location.search).get("callbackURL"),
+        data?.user.role,
+      );
 
       const { error: resError } = await signIn.email({
         email,

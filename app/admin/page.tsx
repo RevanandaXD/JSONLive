@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "@/src/lib/auth-client";
 
 interface UserAdminItem {
   id: string;
@@ -13,12 +15,12 @@ interface UserAdminItem {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { data: sessionData, isPending: sessionPending } = useSession();
+  const isAdmin = sessionData?.user.role === "admin";
+
   const [users, setUsers] = useState<UserAdminItem[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -30,6 +32,11 @@ export default function AdminPage() {
     }
   };
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetchUsers();
+  }, [isAdmin]);
+
   const handleUpdateLimit = async (userId: string, newLimit: number) => {
     await fetch("/api/admin/users", {
       method: "PATCH",
@@ -38,6 +45,20 @@ export default function AdminPage() {
     });
     fetchUsers(); // Refresh data
   };
+
+  if (sessionPending) {
+    return <div className="p-8">Memuat data Admin...</div>;
+  }
+
+  if (!sessionData?.user) {
+    router.push("/login?callbackURL=%2Fadmin");
+    return null;
+  }
+
+  if (!isAdmin) {
+    router.push("/dashboard");
+    return null;
+  }
 
   if (loading) return <div className="p-8">Memuat data Admin...</div>;
 

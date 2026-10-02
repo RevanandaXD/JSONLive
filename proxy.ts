@@ -1,23 +1,30 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/src/lib/auth";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/settings", "/resources"];
+const PROTECTED_PREFIXES = ["/dashboard", "/settings", "/resources", "/admin"];
 const AUTH_PAGES = ["/login", "/register"];
 
-export async function middleware(request: NextRequest) {
+const matchesPrefix = (pathname: string, prefix: string) =>
+  pathname === prefix || pathname.startsWith(`${prefix}/`);
+
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const session = await auth.api.getSession({ headers: request.headers });
   const role = session?.user.role;
 
-  const isAdmin = pathname.startsWith("/admin");
-  const isProtected =
-    PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix)) || isAdmin;
+  const isAdmin = matchesPrefix(pathname, "/admin");
+  const isProtected = PROTECTED_PREFIXES.some((prefix) =>
+    matchesPrefix(pathname, prefix),
+  );
   const isAuthPage = AUTH_PAGES.includes(pathname);
 
   if (isProtected && !session) {
     const url = new URL("/login", request.url);
-    url.searchParams.set("callbackURL", pathname);
+    url.searchParams.set(
+      "callbackURL",
+      `${request.nextUrl.pathname}${request.nextUrl.search}`,
+    );
     return NextResponse.redirect(url);
   }
 
