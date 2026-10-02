@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/src/lib/auth";
 
 const PROTECTED_PREFIXES = ["/dashboard", "/settings", "/resources", "/admin"];
@@ -13,6 +13,7 @@ export async function proxy(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
   const role = session?.user.role;
 
+  const isUser = matchesPrefix(pathname, "/dashboard");
   const isAdmin = matchesPrefix(pathname, "/admin");
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>
     matchesPrefix(pathname, prefix),
@@ -31,6 +32,11 @@ export async function proxy(request: NextRequest) {
   if (isAdmin && role !== "admin") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
+
+  if (isUser && role === "admin") {
+    return NextResponse.redirect(new URL("/admin", request.url));
+  }
+
 
   if (isAuthPage && session) {
     const destination = role === "admin" ? "/admin" : "/dashboard";

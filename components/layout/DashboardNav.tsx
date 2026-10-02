@@ -80,14 +80,25 @@ export const DashboardNav = ({
     });
   };
 
+  const linksToRender =
+    user?.role === "admin"
+      ? [
+          { name: "Admin Panel", route: "/admin", icon: HiOutlineChartBarSquare },
+          { name: "API Docs", route: "/docs", icon: HiOutlineDocumentText },
+          { name: "Public APIs", route: "/public", icon: HiOutlineGlobeAlt },
+          { name: "Settings", route: "/settings", icon: HiOutlineCog6Tooth },
+        ]
+      : userLinks;
+
   const isActive = (route: string) =>
     pathname === route ||
-    (route === "/dashboard" && pathname.startsWith("/dashboard"));
+    (route === "/dashboard" && pathname.startsWith("/dashboard")) ||
+    (route === "/admin" && pathname.startsWith("/admin"));
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Logo href={isLoggedIn ? "/dashboard" : "/"} />
+        <Logo href={isLoggedIn ? (user?.role === "admin" ? "/admin" : "/dashboard") : "/"} />
 
         <div className="flex items-center gap-3">
           {/* Logged-in: user dropdown */}
@@ -112,7 +123,7 @@ export const DashboardNav = ({
 
               {menuOpen && (
                 <div className="absolute right-0 top-full z-40 mt-2 w-52 rounded-md border border-border/70 bg-background p-1 shadow-xl">
-                  {userLinks.map((link) => {
+                  {linksToRender.map((link) => {
                     const Icon = link.icon;
                     const active = isActive(link.route);
 
@@ -228,7 +239,7 @@ export const DashboardNav = ({
                     </div>
                   </div>
                   <nav className="flex flex-col gap-1">
-                    {userLinks.map((link) => {
+                    {linksToRender.map((link) => {
                       const Icon = link.icon;
                       const active = isActive(link.route);
 
