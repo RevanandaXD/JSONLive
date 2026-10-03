@@ -37,7 +37,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 
-
   if (isAuthPage && session) {
     const destination = role === "admin" ? "/admin" : "/dashboard";
     return NextResponse.redirect(new URL(destination, request.url));

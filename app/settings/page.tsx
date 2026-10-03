@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   HiOutlineExclamationTriangle,
@@ -56,7 +56,19 @@ export default function SettingsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmInput, setConfirmInput] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Read deleteRequestedAt from session user if available
+  const userDeleteRequestedAt = (user as { deleteRequestedAt?: string | Date | null })?.deleteRequestedAt;
+  const [pendingDeleteDate, setPendingDeleteDate] = useState<string | Date | null>(userDeleteRequestedAt || null);
+
+  // Sync state if user prop changes
+  useEffect(() => {
+    if (userDeleteRequestedAt !== undefined) {
+      setPendingDeleteDate(userDeleteRequestedAt);
+    }
+  }, [userDeleteRequestedAt]);
 
   const profile = {
     Name: user?.name,
@@ -108,24 +120,38 @@ export default function SettingsPage() {
         deleteAccountRequest(user.email),
       );
 
+      const payload = await res.json().catch(() => null);
+
       if (!res.ok) {
-        const payload = await res.json().catch(() => null);
         setDeleteError(readDeleteAccountError(payload, DELETE_ERROR));
         setDeleting(false);
         return;
       }
 
-      try {
-        await signOut();
-      } catch {
-        // session was already removed on the server, safe to ignore
-      }
-
-      router.push("/");
+      setPendingDeleteDate(payload?.deleteRequestedAt || new Date().toISOString());
+      closeModal();
       router.refresh();
     } catch {
       setDeleteError("Something went wrong. Please try again.");
+    } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = async () => {
+    setCancelling(true);
+    try {
+      const res = await fetch("/api/account/cancel-delete", {
+        method: "POST",
+      });
+      if (res.ok) {
+        setPendingDeleteDate(null);
+        router.refresh();
+      }
+    } catch (err) {
+      console.error("Failed to cancel account deletion:", err);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -282,24 +308,63 @@ export default function SettingsPage() {
                 title="Danger Zone"
                 tone="danger"
               />
-              <div className="flex flex-col justify-between gap-4 px-5 py-5 sm:flex-row sm:items-center">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">
-                    Delete account
-                  </p>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                    Removes your profile, every resource, and their public
-                    endpoints. This cannot be undone.
-                  </p>
+              {pendingDeleteDate ? (
+                <div className="flex flex-col justify-between gap-4 px-5 py-5 sm:flex-row sm:items-center">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-red-400">
+                        Account Deletion Pending (3-Day Queue)
+                      </p>
+                      <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">
+                        Queued
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      Requested on:{" "}
+                      <span className="font-mono text-foreground">
+                        {new Date(pendingDeleteDate).toLocaleString()}
+                      </span>
+                      . Scheduled for permanent deletion on:{" "}
+                      <span className="font-mono font-bold text-red-400">
+                        {new Date(
+                          new Date(pendingDeleteDate).getTime() + 3 * 24 * 60 * 60 * 1000
+                        ).toLocaleString()}
+                      </span>
+                      .
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      You or an administrator can cancel this request at any time before deletion.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelDelete}
+                    disabled={cancelling}
+                    className="shrink-0 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                  >
+                    {cancelling ? "Cancelling..." : "Cancel Deletion Request"}
+                  </Button>
                 </div>
-                <Button
-                  variant="dangerSoft"
-                  onClick={() => setModalOpen(true)}
-                  className="shrink-0"
-                >
-                  Delete account
-                </Button>
-              </div>
+              ) : (
+                <div className="flex flex-col justify-between gap-4 px-5 py-5 sm:flex-row sm:items-center">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">
+                      Delete account
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      Puts your account in a 3-day deletion queue. After 3 days, your profile,
+                      resources, and public endpoints will be permanently deleted.
+                    </p>
+                  </div>
+                  <Button
+                    variant="dangerSoft"
+                    onClick={() => setModalOpen(true)}
+                    className="shrink-0"
+                  >
+                    Delete account
+                  </Button>
+                </div>
+              )}
             </Card>
           )}
         </div>
@@ -308,7 +373,7 @@ export default function SettingsPage() {
       <Modal
         open={modalOpen && !!user?.email}
         onClose={closeModal}
-        title="Delete your account?"
+        title="Request account deletion?"
         footer={
           <>
             <Button variant="secondary" onClick={closeModal} disabled={deleting}>
@@ -321,18 +386,20 @@ export default function SettingsPage() {
                 !isEmailConfirmed(confirmInput, user?.email ?? "") || deleting
               }
             >
-              {deleting ? "Deleting..." : "Delete my account"}
+              {deleting ? "Queueing Deletion..." : "Request Account Deletion"}
             </Button>
           </>
         }
       >
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Your profile, all resources, and their public endpoints will be
-          permanently deleted.
+          Your account will enter a <strong className="text-foreground">3-day deletion queue</strong>.
+          After 3 days, all your data, resources, and public API endpoints will be permanently removed.
         </p>
 
         <div className="mt-4">
-          <Alert tone="danger">This action cannot be undone.</Alert>
+          <Alert tone="warning">
+            You or an admin can cancel this request at any time during the 3-day wait period.
+          </Alert>
         </div>
 
         <label

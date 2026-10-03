@@ -38,6 +38,11 @@ export const auth = betterAuth({
                 required: false,
                 defaultValue: 5,
                 input: false,
+            },
+            deleteRequestedAt: {
+                type: "date",
+                required: false,
+                input: false,
             }
         }
     },

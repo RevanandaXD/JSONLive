@@ -39,6 +39,7 @@ export async function GET() {
       email: true,
       role: true,
       maxResource: true,
+      deleteRequestedAt: true,
       createdAt: true,
       _count: {
         select: { resources: true },
@@ -63,10 +64,11 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { userId, role, maxResource } = (body ?? {}) as {
+  const { userId, role, maxResource, action } = (body ?? {}) as {
     userId?: string;
     role?: Role;
     maxResource?: number;
+    action?: "cancel-delete" | "force-delete";
   };
 
   if (!userId) {
@@ -103,11 +105,23 @@ export async function PATCH(request: Request) {
     );
   }
 
+  if (action === "force-delete") {
+    if (authResult.session.user.id === userId) {
+      return NextResponse.json(
+        { error: "You cannot delete your own admin account from here." },
+        { status: 400 }
+      );
+    }
+    await prisma.user.delete({ where: { id: userId } });
+    return NextResponse.json({ message: "User deleted successfully", deletedUserId: userId });
+  }
+
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: {
       ...(role !== undefined ? { role } : {}),
       ...(maxResource !== undefined ? { maxResource } : {}),
+      ...(action === "cancel-delete" ? { deleteRequestedAt: null } : {}),
     },
     select: {
       id: true,
@@ -116,6 +130,7 @@ export async function PATCH(request: Request) {
       username: true,
       role: true,
       maxResource: true,
+      deleteRequestedAt: true,
     },
   });
 
