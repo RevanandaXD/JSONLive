@@ -26,8 +26,6 @@ interface UserAdminItem {
   _count: { resources: number };
 }
 
-type FilterRole = "all" | "admin" | "user" | "pending-deletion";
-
 export default function AdminPage() {
   const router = useRouter();
   const { data: sessionData, isPending: sessionPending } = useSession();
@@ -37,23 +35,21 @@ export default function AdminPage() {
   const [users, setUsers] = useState<UserAdminItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch("/api/admin/users");
-      const data = await res.json();
-      if (res.ok && Array.isArray(data.users)) {
-        setUsers(data.users);
-      }
-    } catch (err) {
-      console.error("Failed to fetch admin users:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (!isAdmin) return;
-    fetchUsers();
+    void Promise.resolve().then(async () => {
+      try {
+        const res = await fetch("/api/admin/users");
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.users)) {
+          setUsers(data.users);
+        }
+      } catch (err) {
+        console.error("Failed to fetch admin users:", err);
+      } finally {
+        setLoading(false);
+      }
+    });
   }, [isAdmin]);
 
 

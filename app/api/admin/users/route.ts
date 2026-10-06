@@ -1,31 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/src/lib/auth";
 import prisma from "@/src/lib/prisma";
-import { headers } from "next/headers";
+import {
+  requireAdmin,
+  isValidSecretCode,
+  secretNotConfigured,
+} from "@/src/lib/admin";
 
 const ROLES = ["admin", "user"] as const;
 
 type Role = (typeof ROLES)[number];
 
-async function requireAdmin() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    return {
-      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
-    };
-  }
-
-  if (session.user.role !== "admin") {
-    return {
-      error: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
-    };
-  }
-
-  return { session };
-}
+const SECRET_ACTIONS = ["force-delete", "disable"] as const;
 
 export async function GET() {
   const authResult = await requireAdmin();
@@ -39,6 +24,7 @@ export async function GET() {
       email: true,
       role: true,
       maxResource: true,
+      disabled: true,
       deleteRequestedAt: true,
       createdAt: true,
       _count: {
@@ -64,11 +50,14 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { userId, role, maxResource, action } = (body ?? {}) as {
+  const { userId, role, maxResource, action, secretCode } = (
+    body ?? {}
+  ) as {
     userId?: string;
     role?: Role;
     maxResource?: number;
-    action?: "cancel-delete" | "force-delete";
+    action?: "cancel-delete" | "force-delete" | "disable" | "enable";
+    secretCode?: string;
   };
 
   if (!userId) {
@@ -86,6 +75,33 @@ export async function PATCH(request: Request) {
     return NextResponse.json(
       { error: "maxResource must be a non-negative integer" },
       { status: 400 },
+    );
+  }
+
+  if (action !== undefined && !["cancel-delete", "force-delete", "disable", "enable"].includes(action)) {
+    return NextResponse.json(
+      { error: "action must be one of: cancel-delete, force-delete, disable, enable" },
+      { status: 400 },
+    );
+  }
+
+  if (
+    (action === SECRET_ACTIONS[0] || action === SECRET_ACTIONS[1]) &&
+    secretNotConfigured()
+  ) {
+    return NextResponse.json(
+      { error: "Admin secret code is not configured on the server" },
+      { status: 500 },
+    );
+  }
+
+  if (
+    (action === "force-delete" || action === "disable") &&
+    !isValidSecretCode(secretCode)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid admin secret code" },
+      { status: 403 },
     );
   }
 
@@ -116,12 +132,23 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "User deleted successfully", deletedUserId: userId });
   }
 
+  if (action === "disable" && authResult.session.user.id === userId) {
+    return NextResponse.json(
+      { error: "You cannot disable your own admin account." },
+      { status: 400 }
+    );
+  }
+
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: {
       ...(role !== undefined ? { role } : {}),
       ...(maxResource !== undefined ? { maxResource } : {}),
       ...(action === "cancel-delete" ? { deleteRequestedAt: null } : {}),
+      ...(action === "disable" || action === "enable"
+        ? { disabled: action === "disable", deleteRequestedAt:
+            action === "disable" ? null : undefined }
+        : {}),
     },
     select: {
       id: true,
@@ -130,6 +157,7 @@ export async function PATCH(request: Request) {
       username: true,
       role: true,
       maxResource: true,
+      disabled: true,
       deleteRequestedAt: true,
     },
   });
