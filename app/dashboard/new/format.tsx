@@ -7,6 +7,7 @@ type FormatJSONProps = {
   onChange: (value: string) => void;
   placeholder?: string;
   invalid?: boolean;
+  className?: string;
 };
 
 export const FormatJSON = ({
@@ -14,6 +15,7 @@ export const FormatJSON = ({
   onChange,
   placeholder = "",
   invalid = false,
+  className = "",
 }: FormatJSONProps) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -90,7 +92,7 @@ export const FormatJSON = ({
       spellCheck={false}
       className={`h-96 w-full resize-none bg-transparent p-5 font-mono text-sm leading-relaxed outline-none placeholder:text-muted-foreground/40 ${
         invalid ? "text-red-300" : "text-foreground"
-      }`}
+      } ${className}`}
     />
   );
 };

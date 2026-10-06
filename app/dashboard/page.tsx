@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlinePlus, HiOutlineDocumentText } from "react-icons/hi2";
 import { DashboardNav } from "@/components/layout/DashboardNav";
@@ -74,8 +74,17 @@ export default function DashboardPage() {
   const { data: resources = [], isPending, isError, refetch } = useResource();
   const [query, setQuery] = useState("");
 
-  if (!user && !sessionPending) {
-    router.push("/login");
+  useEffect(() => {
+    if (!user && !sessionPending) {
+      router.push("/login");
+    }
+  }, [user, sessionPending, router]);
+
+  if (sessionPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
     return null;
   }
 
@@ -250,4 +259,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
