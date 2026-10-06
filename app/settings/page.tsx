@@ -17,7 +17,7 @@ import { CopyButton } from "@/components/ui/CopyButton";
 import { Modal } from "@/components/ui/Modal";
 import { TextInput } from "@/components/ui/Input";
 import useApiKeys from "@/hooks/useApiKeys";
-import { signOut, useSession } from "@/src/lib/auth-client";
+import { useSession } from "@/src/lib/auth-client";
 import { PUBLIC_BASE_URL } from "@/src/lib/config";
 import {
   SETTINGS_LAYOUT,
@@ -65,9 +65,8 @@ export default function SettingsPage() {
 
   // Sync state if user prop changes
   useEffect(() => {
-    if (userDeleteRequestedAt !== undefined) {
-      setPendingDeleteDate(userDeleteRequestedAt);
-    }
+    if (userDeleteRequestedAt === undefined) return;
+    void Promise.resolve().then(() => setPendingDeleteDate(userDeleteRequestedAt));
   }, [userDeleteRequestedAt]);
 
   const profile = {
