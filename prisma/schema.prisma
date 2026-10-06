@@ -15,6 +15,7 @@ model User {
   maxResource      Int        @default(5)
   image            String?
   username         String?    @unique
+  disabled         Boolean    @default(false)
   deleteRequestedAt DateTime?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
