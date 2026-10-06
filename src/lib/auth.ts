@@ -1,19 +1,46 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { createAuthMiddleware, APIError } from "better-auth/api";
 import prisma from "./prisma";
+
+const blockDisabledUser = {
+    id: "block-disabled-user",
+    hooks: {
+        before: [
+            {
+                matcher: (ctx: { path?: string; method?: string }) =>
+                  ctx.path === "/sign-in/email" && ctx.method === "POST",
+                handler: createAuthMiddleware(async (ctx) => {
+                    const email = (ctx.body as { email?: string } | undefined)?.email;
+                    if (!email) return;
+                    const user = await prisma.user.findUnique({
+                        where: { email },
+                        select: { disabled: true },
+                    });
+                    if (user?.disabled) {
+                        throw new APIError("FORBIDDEN", {
+                            message: "Account has been disabled by an administrator.",
+                        });
+                    }
+                }),
+            },
+        ],
+    },
+};
 
 export const auth = betterAuth({
     baseURL: process.env.BETTER_AUTH_URL,
     database: prismaAdapter(prisma, {
         provider: "postgresql"
     }),
+    plugins: [blockDisabledUser],
     emailAndPassword: {
         enabled: true,
     },
     rateLimit: {
         enabled: true,
         window: 60,
-        max: 5,
+        max: 100,
         customRules: {
             "/sign-up/email": {
                 window: 60,
