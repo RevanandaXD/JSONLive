@@ -15,7 +15,7 @@ export const Footer = () => {
               get a public endpoint.
             </p>
             <a
-              href="https://github.com"
+              href="https://github.com/RevanandaXD"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-1 border p-1.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground w-fit"
