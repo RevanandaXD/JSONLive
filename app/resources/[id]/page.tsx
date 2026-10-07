@@ -153,7 +153,7 @@ export default function ResourceDetailPage() {
             label="Copy URL"
             copiedLabel="Copied"
             ariaLabel="Copy endpoint"
-            className="border-primary bg-primary px-4 py-2.5 text-sm text-background hover:bg-primary-hover hover:text-background"
+            className="border-primary px-4 py-2.5 text-sm text-background hover:bg-primary-hover hover:text-background"
           />
         </div>
 

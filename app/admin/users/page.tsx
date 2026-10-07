@@ -391,26 +391,17 @@ export default function UsersPage() {
                                   )}
                                 </div>
                                 <p className="truncate text-xs text-muted-foreground">
-                                  {u.email} {u.username ? `· @${u.username}` : ""}
+                                  {u.email}
                                 </p>
                               </div>
                             </div>
                           </td>
 
                           <td className="px-5 py-4">
-                            <div className="flex flex-col items-start gap-1">
-                              <button
-                                onClick={() => handleToggleRole(u.id, u.role)}
-                                disabled={isSelf || updatingId === u.id}
-                                title={isSelf ? "Cannot change own role" : "Click to toggle role"}
-                                className={`group inline-flex items-center gap-1.5 transition-opacity ${
-                                  isSelf ? "cursor-not-allowed opacity-80" : "cursor-pointer hover:opacity-80"
-                                }`}
-                              >
-                                <Badge tone={u.role === "admin" ? "violet" : "sky"}>
-                                  {u.role.toUpperCase()}
-                                </Badge>
-                              </button>
+                            <div className="flex flex-row items-center gap-1">
+                              <span className="inline-flex items-center gap-1 rounded bg-blue-500/20 px-2 py-0.5 text-[11px] font-semibold text-white">
+                                {u.role}
+                              </span>
 
                               {u.disabled ? (
                                 <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-semibold text-amber-400">
@@ -439,7 +430,7 @@ export default function UsersPage() {
                           </td>
 
                           <td className="px-5 py-4">
-                            <div className="max-w-xs min-w-[140px]">
+                            <div className="max-w-xs min-w-35">
                               <div className="mb-1.5 flex items-center justify-between font-mono text-xs">
                                 <span className="font-semibold text-foreground">{resCount}</span>
                                 <span className="text-muted-foreground">/ {maxCount} resources</span>
@@ -488,30 +479,27 @@ export default function UsersPage() {
                                           onClick={() => handleEnableUser(u.id)}
                                           disabled={updatingId === u.id}
                                           title="Re-activate this account"
-                                          className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-40"
+                                          className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-40 cursor-pointer"
                                         >
                                           <HiOutlineShieldCheck className="h-3.5 w-3.5" />
-                                          Enable
                                         </button>
                                       ) : (
                                         <button
                                           onClick={() => openSecretModal("disable", u)}
                                           disabled={updatingId === u.id}
                                           title="Disable this account (requires secret code)"
-                                          className="inline-flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 transition-colors hover:bg-amber-500/20 disabled:opacity-40"
+                                          className="inline-flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 transition-colors hover:bg-amber-500/20 disabled:opacity-40 cursor-pointer"
                                         >
                                           <HiOutlineLockClosed className="h-3.5 w-3.5" />
-                                          Disable
                                         </button>
                                       )}
                                       <button
                                         onClick={() => openSecretModal("delete", u)}
                                         disabled={updatingId === u.id}
                                         title="Permanently delete this account (requires secret code)"
-                                        className="inline-flex items-center gap-1 rounded border border-red-500/40 bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-40"
+                                        className="inline-flex items-center gap-1 rounded border border-red-500/40 bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-40 cursor-pointer"
                                       >
                                         <HiOutlineTrash className="h-3.5 w-3.5" />
-                                        Delete
                                       </button>
                                     </>
                                   )}
@@ -528,7 +516,7 @@ export default function UsersPage() {
                                       {maxCount}
                                     </span>
                                     <button
-                                      onClick={() => handleUpdateLimit(u.id, maxCount + 5)}
+                                      onClick={() => handleUpdateLimit(u.id, maxCount + 1)}
                                       disabled={updatingId === u.id}
                                       title="Increase limit by 5"
                                       className="inline-flex h-8 w-8 items-center justify-center rounded border border-border/70 bg-background text-foreground transition-colors hover:bg-muted disabled:opacity-40"
@@ -536,11 +524,11 @@ export default function UsersPage() {
                                       <HiOutlinePlus className="h-3.5 w-3.5" />
                                     </button>
                                     <button
-                                      onClick={() => handleUpdateLimit(u.id, maxCount + 10)}
+                                      onClick={() => handleUpdateLimit(u.id, maxCount + 5)}
                                       disabled={updatingId === u.id}
                                       className="ml-1 rounded border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 disabled:opacity-40"
                                     >
-                                      +10
+                                      +5
                                     </button>
                                   </div>
                                 </div>
