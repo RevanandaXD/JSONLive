@@ -6,8 +6,9 @@ import { HiOutlinePlus, HiOutlineDocumentText } from "react-icons/hi2";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardSkeleton } from "@/components/layout/DashboardSkeleton";
 import { ResourceCard } from "@/components/resources/ResourceCard";
-import { ButtonLink } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Modal } from "@/components/ui/Modal";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { api } from "@/src/lib/api";
 import useResource from "@/hooks/useResource";
@@ -73,6 +74,8 @@ export default function DashboardPage() {
 
   const { data: resources = [], isPending, isError, refetch } = useResource();
   const [query, setQuery] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Resource | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!user && !sessionPending) {
@@ -81,7 +84,11 @@ export default function DashboardPage() {
   }, [user, sessionPending, router]);
 
   if (sessionPending) {
-    return <div>Loading...</div>;
+    return (
+      <div>
+        <DashboardSkeleton />
+      </div>
+    );
   }
 
   if (!user) {
@@ -144,15 +151,28 @@ export default function DashboardPage() {
   const handleTogglePrivate = (r: Resource) =>
     handlePatch(r, { private: !r.private });
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     const resource = resources.find((r) => r.id === id);
     if (!resource) return;
-    if (!confirm(`Delete "${resource.name}"? This cannot be undone.`)) return;
+    setDeleteTarget(resource);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await api.delete(`/api/resources/${id}`);
+      await api.delete(`/api/resources/${deleteTarget.id}`);
+      setDeleteTarget(null);
       refetch();
     } catch {
       console.error("failed to delete");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -256,6 +276,30 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      <Modal
+        open={!!deleteTarget}
+        onClose={closeDeleteModal}
+        title="Delete resource?"
+        footer={
+          <>
+            <Button variant="secondary" onClick={closeDeleteModal} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={confirmDelete} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          You&apos;re about to delete{" "}
+          <span className="font-mono font-medium text-foreground">
+            {deleteTarget?.name}
+          </span>{" "}
+          and its public endpoint. This cannot be undone.
+        </p>
+      </Modal>
     </div>
   );
 }

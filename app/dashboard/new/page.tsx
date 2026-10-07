@@ -240,7 +240,6 @@ function CreateResourcePage() {
                   )}
                   {status === "valid" && (
                     <Badge tone="emerald" className="gap-1 font-sans">
-                      <HiCheck className="h-3.5 w-3.5" />
                       Valid JSON
                     </Badge>
                   )}
