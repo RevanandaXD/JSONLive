@@ -4,6 +4,7 @@ import { auth } from "@/src/lib/auth";
 import { authenticateApiKey } from "@/src/lib/api-key";
 import { RateLimit, RateLimitExceeded, clientIp, rateLimitError } from "@/src/lib/rate-limit";
 import { RATE_LIMIT } from "@/src/lib/config";
+import { readJsonBody, jsonBodyError } from "@/src/lib/body";
 import { headers } from 'next/headers'
 
 type DbParams = {
@@ -20,7 +21,7 @@ const corsHeaders = {
 
 function applyReadLimit(request: Request): NextResponse | null {
   try {
-    RateLimit(clientIp(request), RATE_LIMIT.GET.limit, RATE_LIMIT.GET.windowMS);
+    RateLimit(`get:${clientIp(request)}`, RATE_LIMIT.GET.limit, RATE_LIMIT.GET.windowMs);
     return null;
   } catch (err) {
     if (err instanceof RateLimitExceeded) return rateLimitError(err.retryAfter, corsHeaders);
@@ -30,7 +31,7 @@ function applyReadLimit(request: Request): NextResponse | null {
 
 function applyWriteLimit(request: Request): NextResponse | null {
   try {
-    RateLimit(clientIp(request), RATE_LIMIT.WRITE.limit, RATE_LIMIT.WRITE.windowMS);
+    RateLimit(`write:${clientIp(request)}`, RATE_LIMIT.WRITE.limit, RATE_LIMIT.WRITE.windowMs);
     return null;
   } catch (err) {
     if (err instanceof RateLimitExceeded) return rateLimitError(err.retryAfter, corsHeaders);
@@ -152,12 +153,9 @@ export async function PUT(
     );
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400, headers: corsHeaders });
-  }
+  const parsed = await readJsonBody(request);
+  if (!parsed.ok) return jsonBodyError(parsed, corsHeaders);
+  const body = parsed.data;
 
   if (typeof body !== 'object' || body === null || Array.isArray(body)) {
     return NextResponse.json(
@@ -216,12 +214,9 @@ export async function PATCH(
     );
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400, headers: corsHeaders });
-  }
+  const parsed = await readJsonBody(request);
+  if (!parsed.ok) return jsonBodyError(parsed, corsHeaders);
+  const body = parsed.data;
 
   if (typeof body !== 'object' || body === null || Array.isArray(body)) {
     return NextResponse.json(

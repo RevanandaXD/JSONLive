@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/src/lib/prisma";
 import { auth } from "@/src/lib/auth";
+import { readJsonBody, jsonBodyError } from "@/src/lib/body";
 import { headers } from "next/headers";
 
 type DbParams = {
@@ -61,7 +62,10 @@ export async function PUT(
     if ("error" in result) return result.error;
 
     const { id } = await params;
-    const { name, data, published, private: isPrivate } = await request.json();
+    const parsed = await readJsonBody(request);
+    if (!parsed.ok) return jsonBodyError(parsed);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { name, data, published, private: isPrivate } = parsed.data as any;
 
     const response = await prisma.resource.findUnique({ where: { id } });
     if (!response)
@@ -105,7 +109,10 @@ export async function PATCH(
     if ("error" in result) return result.error;
 
     const { id } = await params;
-    const { published, private: isPrivate } = await request.json();
+    const parsed = await readJsonBody(request);
+    if (!parsed.ok) return jsonBodyError(parsed);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { published, private: isPrivate } = parsed.data as any;
 
     const existing = await prisma.resource.findUnique({ where: { id } });
     if (!existing)
