@@ -11,6 +11,18 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+
+RUN pnpm exec prisma generate
 RUN pnpm run build
 
-CMD [ "pnpm", "start" ]
+RUN mkdir -p .next/standalone/.next \
+    && cp -r .next/static .next/standalone/.next/static \
+    && cp -r public .next/standalone/public
+
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+EXPOSE 3000
+
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && exec node .next/standalone/server.js"]
