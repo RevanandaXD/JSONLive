@@ -1,6 +1,6 @@
 services:
   jsonlive:
-    image: ghcr.io/RevanandaXD/jsonlive:latest
+    image: ghcr.io/revanandaxd/jsonlive:latest
     ports:
       - "4500:3000"
     environment:
