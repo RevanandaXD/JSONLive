@@ -60,3 +60,25 @@ jobs:
 
       - name: build
         run: pnpm run build
+
+      - name: Login to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build Docker image
+        if: github.event_name == 'push'
+        run: |
+          docker build \
+            -t ghcr.io/revanandaxd/jsonlive:latest \
+            -t ghcr.io/revanandaxd/jsonlive:${{ github.sha }} \
+            .
+
+      - name: Push Docker image
+        if: github.event_name == 'push'
+        run: |
+          docker push ghcr.io/revanandaxd/jsonlive:latest
+          docker push ghcr.io/revanandaxd/jsonlive:${{ github.sha }}

@@ -14,6 +14,9 @@ COPY . .
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 
+# Prisma Generate Purpose
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
 RUN pnpm exec prisma generate
 RUN pnpm run build
 
