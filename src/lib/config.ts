@@ -1,4 +1,5 @@
-export const PUBLIC_BASE_URL = "http://localhost:3000";
+export const PUBLIC_BASE_URL =
+  process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export const DEFAULT_USERNAME = "User";
 
@@ -8,8 +9,8 @@ export const LIMITS = {
 };
 
 export const RATE_LIMIT = {
-  GET: { limit: 500, windowMS: 60_000 },
-  WRITE: { limit:  100, windowMS: 60_000}
+  GET: { limit: 500, windowMs: 60_000 },
+  WRITE: { limit:  100, windowMs: 60_000}
 };
 
 export const MAX_API_KEYS = 5;
