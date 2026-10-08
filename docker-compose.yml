@@ -1,6 +1,6 @@
 services:
   jsonlive:
-    image: ghcr.io/revanandaxd/jsonlive:latest
+    image: ghcr.io/RevanandaXD/jsonlive:latest
     ports:
       - "4500:3000"
     environment:
@@ -23,4 +23,11 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 60s
+      start_period: 
+    
+    networks:
+      - server_network
+
+networks:
+  server_network:
+    external: true
