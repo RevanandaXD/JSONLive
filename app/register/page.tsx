@@ -7,6 +7,7 @@ import {
   HiOutlineCheckBadge,
   HiOutlineEnvelope,
   HiOutlineUser,
+  HiLockClosed
 } from "react-icons/hi2";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { Alert } from "@/components/ui/Alert";
@@ -125,6 +126,7 @@ export default function RegisterPage() {
           <PasswordInput
             id="password"
             value={password}
+            icon={HiLockClosed}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
             placeholder="Min. 6 characters"

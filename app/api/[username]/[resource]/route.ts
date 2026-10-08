@@ -74,9 +74,12 @@ export async function GET(
   }
 
   if (found.private) {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session || session.user.id !== found.userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders })
+    const apiKeyUserId = await authenticateApiKey(request.headers);
+    const session = apiKeyUserId ? null : await auth.api.getSession({ headers: await headers() });
+    const isAuthorized = apiKeyUserId === found.userId || session?.user.id === found.userId;
+    
+    if (!isAuthorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
     }
   }
 
