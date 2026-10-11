@@ -50,7 +50,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { userId, role, maxResource, action, secretCode } = (
+  const { userId, role, maxResource, action, secretCode, confirmUsername } = (
     body ?? {}
   ) as {
     userId?: string;
@@ -58,6 +58,7 @@ export async function PATCH(request: Request) {
     maxResource?: number;
     action?: "cancel-delete" | "force-delete" | "disable" | "enable";
     secretCode?: string;
+    confirmUsername?: string;
   };
 
   if (!userId) {
@@ -85,33 +86,39 @@ export async function PATCH(request: Request) {
     );
   }
 
-  if (
-    (action === SECRET_ACTIONS[0] || action === SECRET_ACTIONS[1]) &&
-    secretNotConfigured()
-  ) {
-    return NextResponse.json(
-      { error: "Admin secret code is not configured on the server" },
-      { status: 500 },
-    );
-  }
-
-  if (
-    (action === "force-delete" || action === "disable") &&
-    !isValidSecretCode(secretCode)
-  ) {
-    return NextResponse.json(
-      { error: "Invalid admin secret code" },
-      { status: 403 },
-    );
-  }
-
   const target = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true },
+    select: { id: true, username: true, email: true },
   });
 
   if (!target) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  if (action === "force-delete") {
+    const expectedUsername = target.username || target.email;
+    const provided = (confirmUsername || secretCode || "").trim();
+    if (provided !== expectedUsername && !isValidSecretCode(secretCode)) {
+      return NextResponse.json(
+        { error: `Confirmation does not match. Please enter the user's username ("${expectedUsername}").` },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (action === "disable") {
+    if (secretNotConfigured()) {
+      return NextResponse.json(
+        { error: "Admin secret code is not configured on the server" },
+        { status: 500 },
+      );
+    }
+    if (!isValidSecretCode(secretCode)) {
+      return NextResponse.json(
+        { error: "Invalid admin secret code" },
+        { status: 403 },
+      );
+    }
   }
 
   if (authResult.session.user.id === userId && role !== undefined && role !== "admin") {

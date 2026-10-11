@@ -104,15 +104,21 @@ export function AdminCharts({ users }: { users: AdminChartUser[] }) {
   const regularCount = totalUsers - adminCount - pendingDeletion;
 
   const roleData = [
-    { name: "Regular", value: Math.max(0, regularCount), color: CHART_COLORS.primary },
+    {
+      name: "Regular",
+      value: Math.max(0, regularCount),
+      color: CHART_COLORS.primary,
+    },
     { name: "Admin", value: adminCount, color: CHART_COLORS.violet },
-    { name: "Pending Deletion", value: pendingDeletion, color: CHART_COLORS.red },
+    {
+      name: "Pending Deletion",
+      value: pendingDeletion,
+      color: CHART_COLORS.red,
+    },
   ].filter((d) => d.value > 0);
 
   const topUsers = [...users]
-    .sort(
-      (a, b) => (b._count?.resources || 0) - (a._count?.resources || 0)
-    )
+    .sort((a, b) => (b._count?.resources || 0) - (a._count?.resources || 0))
     .slice(0, 7)
     .map((u) => ({
       name: (u.name || u.email.split("@")[0]).slice(0, 12),
@@ -146,17 +152,21 @@ export function AdminCharts({ users }: { users: AdminChartUser[] }) {
   return (
     <div className="mb-8 grid gap-4 lg:grid-cols-3">
       {/* User Signups Trend */}
-      <ChartCard
-        title="User Signups"
-        hint="New registrations per month"
-        >
+      <ChartCard title="User Signups" hint="New registrations per month">
         <div className="h-56">
           {signupData.length === 0 ? (
             <EmptyChart text="No signup data yet." />
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={signupData} margin={{ top: 4, right: 8, left: -22, bottom: 0 }}>
-                <CartesianGrid stroke={CHART_COLORS.grid} strokeDasharray="3 3" vertical={false} />
+              <LineChart
+                data={signupData}
+                margin={{ top: 4, right: 8, left: -22, bottom: 0 }}
+              >
+                <CartesianGrid
+                  stroke={CHART_COLORS.grid}
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="month"
                   tick={{ fill: CHART_COLORS.label, fontSize: 11 }}
@@ -169,7 +179,10 @@ export function AdminCharts({ users }: { users: AdminChartUser[] }) {
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke: CHART_COLORS.muted }} />
+                <Tooltip
+                  content={<ChartTooltip />}
+                  cursor={{ stroke: CHART_COLORS.muted }}
+                />
                 <Line
                   type="monotone"
                   dataKey="users"
@@ -237,8 +250,15 @@ export function AdminCharts({ users }: { users: AdminChartUser[] }) {
             <EmptyChart text="No resources created yet." />
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topUsers} margin={{ top: 4, right: 8, left: -22, bottom: 0 }}>
-                <CartesianGrid stroke={CHART_COLORS.grid} strokeDasharray="3 3" vertical={false} />
+              <BarChart
+                data={topUsers}
+                margin={{ top: 4, right: 8, left: -22, bottom: 0 }}
+              >
+                <CartesianGrid
+                  stroke={CHART_COLORS.grid}
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="name"
                   tick={{ fill: CHART_COLORS.label, fontSize: 11 }}
@@ -251,20 +271,39 @@ export function AdminCharts({ users }: { users: AdminChartUser[] }) {
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
-                <Bar dataKey="resources" name="Resources" fill={CHART_COLORS.primary} radius={[3, 3, 0, 0]} />
-                <Bar dataKey="limit" name="Limit" fill={CHART_COLORS.muted} radius={[3, 3, 0, 0]} />
+                <Tooltip
+                  content={<ChartTooltip />}
+                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                />
+                <Bar
+                  dataKey="resources"
+                  name="Resources"
+                  fill={CHART_COLORS.primary}
+                  radius={[3, 3, 0, 0]}
+                />
+                <Bar
+                  dataKey="limit"
+                  name="Limit"
+                  fill={CHART_COLORS.muted}
+                  radius={[3, 3, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
         <div className="mt-1 flex justify-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CHART_COLORS.primary }} />
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: CHART_COLORS.primary }}
+            />
             Resources
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CHART_COLORS.muted }} />
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: CHART_COLORS.muted }}
+            />
             Limit
           </span>
         </div>

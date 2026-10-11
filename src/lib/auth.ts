@@ -73,10 +73,41 @@ export const auth = betterAuth({
             }
         }
     },
-    // Next Update
-    // socialProviders: {
-    //     github: {
-    //         clientId, clientSecret
-    //     }
-    // }
-})
+    databaseHooks: {
+        user: {
+            create: {
+                before: async (user) => {
+                    let username = (user as { username?: string }).username;
+                    if (!username) {
+                        const raw = (user.name || user.email?.split("@")[0] || "user")
+                            .toLowerCase()
+                            .replace(/[^a-z0-9_-]/g, "");
+                        let base = raw.slice(0, 15);
+                        if (base.length < 3) base = `user_${base}`.slice(0, 15);
+
+                        let candidate = base;
+                        let counter = 1;
+                        while (await prisma.user.findUnique({ where: { username: candidate } })) {
+                            candidate = `${base.slice(0, 12)}${counter++}`;
+                        }
+                        username = candidate;
+                    }
+
+                    return {
+                        data: {
+                            ...user,
+                            username,
+                            role: (user as { role?: string }).role || "user",
+                        },
+                    };
+                },
+            },
+        },
+    },
+    socialProviders: {
+        google: {
+            clientId: process.env.GOOGLE_CLIENT_ID as string,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+        },
+    },
+});
