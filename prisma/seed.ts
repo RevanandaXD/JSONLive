@@ -10,54 +10,34 @@ const prisma = new PrismaClient({
 
 const USERS = [
   {
-    email: "admin@jsonlive.com",
+    email: process.env.ADMIN_EMAIL as string,
     name: "admin",
     role: "admin",
-    username: "admin",
-    password: "password123"
+    username: process.env.ADMIN_USERNAME as string,
+    password: process.env.ADMIN_PASSWORD as string,
   },
   {
-    email: "demo@jsonlive.com",
-    name: "Revan",
+    email: "nadia.putri@gmail.com",
+    name: "Nadia Putri",
     role: "user",
-    username: "revan",
-    password: "password123",
+    username: "nadia",
+    password: "Nad!a_9264",
   },
   {
-    email: "budi@jsonlive.com",
-    name: "Budi",
+    email: "farhan.pratama@gmail.com",
+    name: "Farhan Pratama",
     role: "user",
-    username: "budi",
-    password: "password123",
+    username: "farhan",
+    password: "FhP@2026_317",
+  },
+  {
+    email: "rizky.maulana@gmail.com",
+    name: "Rizky Maulana",
+    role: "user",
+    username: "rizky",
+    password: "Rzk#Mln_605",
   },
 ];
-
-const RESOURCES: Record<
-  string,
-  { name: string; slug: string; data: Prisma.InputJsonValue }[]
-> = {
-  revan: [
-    {
-      name: "Users",
-      slug: "users",
-      data: [
-        { id: 1, name: "Alice", email: "alice@example.com", role: "admin" },
-        { id: 2, name: "Bob", email: "bob@example.com", role: "user" },
-        { id: 3, name: "Charlie", email: "charlie@example.com", role: "user" },
-      ],
-    },
-  ],
-  budi: [
-    {
-      name: "Users",
-      slug: "users",
-      data: [
-        { id: 1, name: "Diana", email: "diana@example.com", role: "user" },
-        { id: 2, name: "Eve", email: "eve@example.com", role: "admin" },
-      ],
-    },
-  ],
-};
 
 async function hashPassword(password: string): Promise<string> {
   const { hashPassword } = await import("better-auth/crypto");
@@ -108,36 +88,6 @@ async function main() {
     }
 
     console.log(`User: ${user.name} (${user.email}) username=${user.username}`);
-
-    const resources = RESOURCES[userData.username] ?? [];
-
-    for (const resource of resources) {
-      const existing = await prisma.resource.findFirst({
-        where: { userId: user.id, slug: resource.slug },
-      });
-
-      if (existing) {
-        await prisma.resource.update({
-          where: { id: existing.id },
-          data: {
-            data: resource.data,
-            name: resource.name,
-            published: true,
-          },
-        });
-      } else {
-        await prisma.resource.create({
-          data: {
-            userId: user.id,
-            name: resource.name,
-            slug: resource.slug,
-            data: resource.data,
-            published: true,
-          },
-        });
-      }
-      console.log(`  Resource: ${resource.name} (/${user.username}/${resource.slug})`);
-    }
   }
 
   console.log("\n--- Done ---");
