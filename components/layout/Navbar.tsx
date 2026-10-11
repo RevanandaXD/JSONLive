@@ -9,6 +9,7 @@ import { useSession } from "@/src/lib/auth-client";
 const navLinks = [
   { name: "Features", route: "#features" },
   { name: "How It Works", route: "#how-it-works" },
+  { name: "Docs API", route: "/docs" }
 ];
 
 export const Navbar = () => {
