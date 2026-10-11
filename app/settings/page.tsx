@@ -187,7 +187,7 @@ export default function SettingsPage() {
                     <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       {field}
                     </dt>
-                    <dd className="mt-1 break-words font-mono text-sm text-foreground">
+                    <dd className="mt-1 wrap-break-words font-mono text-sm text-foreground">
                       {displayValue(profile[field])}
                     </dd>
                   </div>

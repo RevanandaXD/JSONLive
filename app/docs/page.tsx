@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ReactNode } from "react";
 import Link from "next/link";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { MethodBadge } from "@/components/ui/Badge";
