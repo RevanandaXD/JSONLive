@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --experimental-strip-types --test tests/settings.test.ts tests/format.test.ts",
-    "db:seed": "node prisma db:seed",
+    "db:seed": "prisma db seed",
     "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
