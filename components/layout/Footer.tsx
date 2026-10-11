@@ -53,6 +53,13 @@ export const Footer = () => {
                 Special Thanks
                 <FiArrowUpRight className="w-3 h-3 opacity-0 transition-all duration-200 group-hover:opacity-60" />
               </Link>
+              <Link
+                href="/policy"
+                className="group inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground w-fit"
+              >
+                Privacy & Terms
+                <FiArrowUpRight className="w-3 h-3 opacity-0 transition-all duration-200 group-hover:opacity-60" />
+              </Link>
             </div>
           </div>
 
