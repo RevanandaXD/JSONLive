@@ -77,7 +77,10 @@ export default function ResourcePage() {
   const [query, setQuery] = useState("");
   const [filterTab, setFilterTab] = useState<FilterTab>("all");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [resourceToDelete, setResourceToDelete] = useState<AdminResourceItem | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [ownerId, setOwnerId] = useState("");
@@ -167,20 +170,34 @@ export default function ResourcePage() {
     setTouched(false);
   };
 
-  const handleDelete = async (resource: AdminResourceItem) => {
-    const ownerName = resource.user?.username || resource.user?.name || resource.user?.email;
-    if (!confirm(`Delete "${resource.name}" (/${ownerName}/${resource.slug}) permanently?`)) return;
-    setDeletingId(resource.id);
+  const openDeleteModal = (resource: AdminResourceItem) => {
+    setResourceToDelete(resource);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteModalOpen(false);
+    setResourceToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!resourceToDelete) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/resources/${resource.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/resources/${resourceToDelete.id}`, { method: "DELETE" });
       if (res.ok) {
-        setResources((prev) => prev.filter((r) => r.id !== resource.id));
-        showNotification(`Resource "${resource.name}" deleted.`);
+        setResources((prev) => prev.filter((r) => r.id !== resourceToDelete.id));
+        showNotification(`Resource "${resourceToDelete.name}" deleted.`);
+        closeDeleteModal();
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        alert(errJson.error || "Failed to delete resource");
       }
     } catch (err) {
       console.error("Failed to delete resource:", err);
     } finally {
-      setDeletingId(null);
+      setDeleting(false);
     }
   };
 
@@ -383,10 +400,10 @@ export default function ResourcePage() {
                           <td className="px-5 py-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
-                                onClick={() => handleDelete(r)}
-                                disabled={deletingId === r.id}
+                                onClick={() => openDeleteModal(r)}
+                                disabled={deleting && resourceToDelete?.id === r.id}
                                 title="Delete resource"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded border border-red-500/40 bg-red-500/10 text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-40"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded border border-red-500/40 bg-red-500/10 text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-40 cursor-pointer"
                               >
                                 <HiOutlineTrash className="h-3.5 w-3.5" />
                               </button>
@@ -503,6 +520,40 @@ export default function ResourcePage() {
                 checked={isPrivate}
                 onChange={setIsPrivate}
               />
+            </div>
+          </Modal>
+
+          <Modal
+            open={deleteModalOpen}
+            onClose={closeDeleteModal}
+            title="Delete Resource"
+            footer={
+              <>
+                <Button variant="secondary" onClick={closeDeleteModal} disabled={deleting}>
+                  Cancel
+                </Button>
+                <Button variant="danger" onClick={confirmDelete} disabled={deleting}>
+                  {deleting ? "Deleting..." : "Delete resource"}
+                </Button>
+              </>
+            }
+          >
+            <div className="space-y-3">
+              <p className="text-sm text-foreground">
+                Are you sure you want to permanently delete{" "}
+                <span className="font-semibold text-foreground">
+                  &ldquo;{resourceToDelete?.name}&rdquo;
+                </span>
+                ?
+              </p>
+              {resourceToDelete && (
+                <div className="rounded-md border border-border/60 bg-muted/30 p-3 font-mono text-xs text-muted-foreground">
+                  /{resourceToDelete.user?.username || resourceToDelete.user?.name || resourceToDelete.user?.email}/{resourceToDelete.slug}
+                </div>
+              )}
+              <p className="text-xs text-red-400">
+                This action cannot be undone. All data in this endpoint will be permanently erased.
+              </p>
             </div>
           </Modal>
         </main>

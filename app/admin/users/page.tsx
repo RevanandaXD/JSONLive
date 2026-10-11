@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Modal } from "@/components/ui/Modal";
-import { Field, PasswordInput } from "@/components/ui/Input";
+import { Field, PasswordInput, TextInput } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { useSession } from "@/src/lib/auth-client";
@@ -44,6 +44,7 @@ interface SecretAction {
   userId: string;
   name: string;
   email: string;
+  username: string;
 }
 
 export default function UsersPage() {
@@ -187,7 +188,13 @@ export default function UsersPage() {
   const openSecretModal = (type: SecretAction["type"], user: UserAdminItem) => {
     setSecretError(null);
     setSecretInput("");
-    setSecretAction({ type, userId: user.id, name: user.name, email: user.email });
+    setSecretAction({
+      type,
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      username: user.username || user.email,
+    });
   };
 
   const closeSecretModal = () => {
@@ -202,14 +209,20 @@ export default function UsersPage() {
     setSecretSubmitting(true);
     setSecretError(null);
     try {
+      const payload: Record<string, unknown> = {
+        userId: secretAction.userId,
+        action: secretAction.type === "delete" ? "force-delete" : "disable",
+      };
+      if (secretAction.type === "delete") {
+        payload.confirmUsername = secretInput.trim();
+      } else {
+        payload.secretCode = secretInput.trim();
+      }
+
       const res = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: secretAction.userId,
-          action: secretAction.type === "delete" ? "force-delete" : "disable",
-          secretCode: secretInput.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -218,7 +231,7 @@ export default function UsersPage() {
       }
       if (secretAction.type === "delete") {
         setUsers((prev) => prev.filter((u) => u.id !== secretAction.userId));
-        showNotification(`User account ${secretAction.email} has been permanently deleted.`);
+        showNotification(`User account ${secretAction.username || secretAction.email} has been permanently deleted.`);
       } else {
         setUsers((prev) =>
           prev.map((u) =>
@@ -293,8 +306,8 @@ export default function UsersPage() {
                 User Management
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Manage user accounts, roles, limits, and deletions. Disabling or deleting an account
-                requires the admin secret code.
+                Manage user accounts, roles, limits, and deletions. Disabling an account requires
+                the admin secret code
               </p>
             </div>
           </div>
@@ -556,10 +569,14 @@ export default function UsersPage() {
                 <Button
                   variant="danger"
                   onClick={submitSecret}
-                  disabled={!secretInput.trim() || secretSubmitting}
+                  disabled={
+                    secretSubmitting ||
+                    !secretInput.trim() ||
+                    (secretAction?.type === "delete" && secretInput.trim() !== secretAction?.username)
+                  }
                 >
                   {secretSubmitting
-                    ? "Verifying..."
+                    ? "Processing..."
                     : secretAction?.type === "delete"
                       ? "Delete account"
                       : "Disable account"}
@@ -577,24 +594,51 @@ export default function UsersPage() {
                   {secretAction?.name || secretAction?.email}
                 </span>
               </p>
-              <Field
-                label="Admin secret code"
-                htmlFor="admin-secret-code"
-                hint="The action can only be confirmed with the ADMIN_ACTION_SECRET code."
-              >
-                <PasswordInput
-                  id="admin-secret-code"
-                  value={secretInput}
-                  onChange={(e) => setSecretInput(e.target.value)}
-                  placeholder="Enter secret code"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && secretInput.trim() && !secretSubmitting) {
-                      submitSecret();
-                    }
-                  }}
-                />
-              </Field>
+
+              {secretAction?.type === "delete" ? (
+                <Field
+                  label="Confirm Username"
+                  htmlFor="confirm-delete-username"
+                  hint={
+                    <span>
+                      Please type <strong className="font-mono text-foreground font-semibold">{secretAction.username}</strong> to confirm deletion.
+                    </span>
+                  }
+                >
+                  <TextInput
+                    id="confirm-delete-username"
+                    value={secretInput}
+                    onChange={(e) => setSecretInput(e.target.value)}
+                    placeholder={`Type "${secretAction.username}"`}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && secretInput.trim() === secretAction.username && !secretSubmitting) {
+                        submitSecret();
+                      }
+                    }}
+                  />
+                </Field>
+              ) : (
+                <Field
+                  label="Admin secret code"
+                  htmlFor="admin-secret-code"
+                  hint="The action can only be confirmed with the ADMIN_ACTION_SECRET code."
+                >
+                  <PasswordInput
+                    id="admin-secret-code"
+                    value={secretInput}
+                    onChange={(e) => setSecretInput(e.target.value)}
+                    placeholder="Enter secret code"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && secretInput.trim() && !secretSubmitting) {
+                        submitSecret();
+                      }
+                    }}
+                  />
+                </Field>
+              )}
+
               {secretError && <Alert tone="danger">{secretError}</Alert>}
             </div>
           </Modal>
