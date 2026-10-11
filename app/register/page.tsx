@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,11 +9,12 @@ import {
   HiOutlineUser,
   HiLockClosed
 } from "react-icons/hi2";
+import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Field, PasswordInput, TextInput } from "@/components/ui/Input";
-import { signUp } from "@/src/lib/auth-client";
+import { signIn, signUp } from "@/src/lib/auth-client";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_PATTERN = /^[a-z0-9_-]{3,20}$/;
@@ -24,9 +25,35 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+
+  useEffect(() => {
+    const handlePageShow = () => {
+      setLoading(false);
+      setLoadingGoogle(false);
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, []);
+
+  const handleAuthGoogle = async () => {
+    try {
+      setError(null);
+      setLoadingGoogle(true);
+      await signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
+      setLoadingGoogle(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,10 +72,6 @@ export default function RegisterPage() {
     }
     if (password.length < MIN_PASSWORD) {
       setError(`Password must be at least ${MIN_PASSWORD} characters`);
-      return;
-    }
-    if (password !== confirm) {
-      setError("Passwords do not match");
       return;
     }
 
@@ -95,6 +118,17 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <Field label="Username" htmlFor="username">
+          <TextInput
+            id="username"
+            icon={HiOutlineUser}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            placeholder="e.g. revan"
+          />
+        </Field>
+
         <Field label="Email" htmlFor="email">
           <TextInput
             id="email"
@@ -104,17 +138,6 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
             placeholder="e.g. revan@example.com"
-          />
-        </Field>
-
-        <Field label="Username" htmlFor="username">
-          <TextInput
-            id="username"
-            icon={HiOutlineUser}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            placeholder="e.g. revan"
           />
         </Field>
 
@@ -133,26 +156,33 @@ export default function RegisterPage() {
           />
         </Field>
 
-        <Field label="Confirm password" htmlFor="confirm">
-          <PasswordInput
-            id="confirm"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            autoComplete="new-password"
-            placeholder="Repeat your password"
-            icon={HiOutlineCheckBadge}
-          />
-        </Field>
-
         {error && <Alert tone="danger">{error}</Alert>}
 
         <Button
           type="submit"
           variant="primary"
-          disabled={loading}
-          className="mt-1 w-full"
+          disabled={loading || loadingGoogle}
+          className="mt-1 w-full cursor-pointer py-2.5 shadow-xs"
         >
           {loading ? "Creating account..." : "Create account"}
+        </Button>
+
+        <div className="relative my-1 flex items-center justify-center">
+          <div className="w-full border-t border-border/80" />
+          <span className="absolute bg-card px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            or
+          </span>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleAuthGoogle}
+          disabled={loading || loadingGoogle}
+          className="w-full flex items-center justify-center gap-2.5 cursor-pointer py-2.5 border-border/80 hover:bg-muted/80 transition-all font-medium"
+        >
+          <FcGoogle className="h-4 w-4 shrink-0 text-base" />
+          <span>{loadingGoogle ? "Connecting to Google..." : "Continue with Google"}</span>
         </Button>
       </form>
 
