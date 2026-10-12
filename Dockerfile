@@ -11,7 +11,7 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-ARG NEXT_PUBLIC_APP_URL=http://localhost:4500
+ARG NEXT_PUBLIC_APP_URL=https://jsonlive.revandev.my.id
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 
 # Prisma Generate Purpose
