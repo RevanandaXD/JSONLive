@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     if (bodySize > LIMITS.MAX_JSON_SIZE) {
       return NextResponse.json({
         status: 400,
-        error: "JSON size exceeds 1MB limit"
+        error: `JSON size exceeds ${Math.floor(LIMITS.MAX_JSON_SIZE / 1024 / 1024)}MB limit`
       }, { status: 400 })
     }
 

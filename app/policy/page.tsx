@@ -18,8 +18,8 @@ const policyItems = [
     tag: "Data Handling",
     title: "Data Collection & Payload Privacy",
     content: [
-      "JSONLive stores only minimal account identifiers and the JSON documents you submit to build public endpoints.",
-      "All saved resource endpoints are publicly queryable by design. Never store sensitive credentials, private API keys, payment info, or production user records.",
+      "JSONLive stores only minimal account identifiers and the JSON documents you submit to build endpoints.",
+      "Resources are public by default; you can mark a resource as private to require an API key. Even so, never store sensitive credentials, payment info, or production user records.",
     ],
   },
   {
@@ -28,7 +28,7 @@ const policyItems = [
     title: "CORS & Public Endpoint Visibility",
     content: [
       "Endpoints automatically include open Access-Control-Allow-Origin headers so your web and mobile applications can perform fetch requests immediately.",
-      "Anyone possessing your resource URL path can access the payload. Maintain unique resource names to prevent unintended discoveries.",
+      "Public resources can be read by anyone possessing the URL path; private resources require a valid API key. Maintain unique resource names to prevent unintended discoveries.",
     ],
   },
   {
@@ -36,7 +36,7 @@ const policyItems = [
     tag: "Traffic Rules",
     title: "Fair Use & Rate Limiting",
     content: [
-      "Requests are throttled per client IP: up to 60 GET requests/minute and 10 write operations/minute to ensure host stability.",
+      "Requests are throttled per client IP: up to 500 GET requests/minute and 100 write operations/minute to ensure host stability.",
       "Automated stress testing, abusive scraping, or denial-of-service simulations are prohibited and will result in rate-limiting or IP restriction.",
     ],
   },
@@ -45,7 +45,7 @@ const policyItems = [
     tag: "Capacity",
     title: "Storage Quotas & JSON Limits",
     content: [
-      "Each resource payload has a maximum size cap of 1 MB. Free tier accounts can create up to 20 resources simultaneously.",
+      "Each resource payload has a maximum size cap of 5 MB. Free tier accounts can create up to 5 resources simultaneously.",
       "JSONLive is optimized for development, testing, and staging. Keep local copies of essential schemas and payloads.",
     ],
   },
