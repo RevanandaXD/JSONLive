@@ -50,9 +50,8 @@ export const Hero = () => {
 
           {/* Subtext */}
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-background/80">
-            Paste your JSON, save it, and get a public API endpoint instantly.
-            No backend setup required. Perfect for frontend development,
-            prototyping, and testing.
+            Paste your JSON and get a live API endpoint instantly. Think of it
+            as json-server, hosted and public, with no install or setup.
           </p>
 
           {/* CTAs */}

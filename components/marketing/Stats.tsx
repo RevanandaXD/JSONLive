@@ -28,7 +28,7 @@ const stats: Stat[] = [
   {
     value: 100,
     suffix: "%",
-    label: "Open source & free",
+    label: "Free to use",
   },
 ];
 

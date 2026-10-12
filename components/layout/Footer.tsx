@@ -83,7 +83,7 @@ export const Footer = () => {
 
         {/* Bottom */}
         <div className="mt-10 border-t border-border/40 pt-6 text-center text-xs text-muted-foreground/60">
-          &copy; {new Date().getFullYear()} JSONLive. Open source project. Made By Revananda
+          &copy; {new Date().getFullYear()} JSONLive. Made by Revananda
         </div>
       </div>
     </footer>

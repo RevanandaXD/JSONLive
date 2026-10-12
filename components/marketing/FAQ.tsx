@@ -14,7 +14,7 @@ const frequencyAsk: FAQItem[] = [
   {
     question: "What is JSONLive?",
     answer:
-      "JSONLive turns your JSON data into a public API endpoint instantly. Paste your JSON, save it, and get a URL you can use with fetch() or any HTTP client.",
+      "JSONLive turns your JSON data into a live API endpoint instantly. Paste your JSON, save it, and get a URL you can use with fetch() or any HTTP client — public or protected with an API key.",
   },
   {
     question: "Do I need to create a server?",
@@ -29,17 +29,17 @@ const frequencyAsk: FAQItem[] = [
   {
     question: "Is my JSON data public?",
     answer:
-      "Public endpoints are accessible by anyone who knows the URL. Don't store passwords, API keys, tokens, or other sensitive information in your JSON.",
+      "You choose. Resources are public by default, so anyone with the endpoint URL can read them. You can also mark a resource as private — requests then need one of your API keys, sent as an x-api-key header (or Authorization: Bearer), to return the data.",
   },
   {
     question: "How big can my JSON be?",
     answer:
-      "For the MVP, JSONLive limits the size of each resource to keep the service fast and reliable — up to 1 MB per resource.",
+      "Each resource can be up to 5 MB of JSON. The limit keeps the service fast and reliable for everyone.",
   },
   {
     question: "Do you have rate limits?",
     answer:
-      "Yes. Public endpoints are rate-limited to prevent abuse and keep the service available for everyone.",
+      "Yes. All endpoints are rate-limited to prevent abuse and keep the service available for everyone.",
   },
 ];
 
