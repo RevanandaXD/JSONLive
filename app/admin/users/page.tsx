@@ -294,7 +294,7 @@ export default function UsersPage() {
       <div className="lg:pl-64 lg:pt-6">
         <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           {successMsg && (
-            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-400 shadow-lg backdrop-blur">
+            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700 shadow-lg backdrop-blur dark:text-emerald-400">
               <HiOutlineCheck className="h-5 w-5 shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -412,17 +412,17 @@ export default function UsersPage() {
 
                           <td className="px-5 py-4">
                             <div className="flex flex-row items-center gap-1">
-                              <span className="inline-flex items-center gap-1 rounded bg-blue-500/20 px-2 py-0.5 text-[11px] font-semibold text-white">
+                              <span className="inline-flex items-center gap-1 rounded bg-blue-500/20 px-2 py-0.5 text-[11px] font-semibold text-blue-600 dark:text-white">
                                 {u.role}
                               </span>
 
                               {u.disabled ? (
-                                <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-semibold text-amber-400">
+                                <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
                                   <HiOutlineLockClosed className="h-3 w-3" />
                                   DISABLED
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+                                <span className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
                                   <HiOutlineShieldCheck className="h-3 w-3" />
                                   ACTIVE
                                 </span>
@@ -430,11 +430,11 @@ export default function UsersPage() {
 
                               {isPendingDelete && (
                                 <div className="mt-1 flex flex-col gap-0.5">
-                                  <span className="inline-flex items-center gap-1 rounded bg-red-500/20 px-2 py-0.5 text-[11px] font-semibold text-red-400">
+                                  <span className="inline-flex items-center gap-1 rounded bg-red-500/20 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:text-red-400">
                                     <HiOutlineClock className="h-3 w-3" />
                                     Queued Deletion (3d)
                                   </span>
-                                  <span className="text-[10px] text-red-300/80">
+                                  <span className="text-[10px] text-red-500/80 dark:text-red-300/80">
                                     Deletes: {deleteScheduledFor?.toLocaleDateString()} {deleteScheduledFor?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                   </span>
                                 </div>
@@ -467,7 +467,7 @@ export default function UsersPage() {
                                     onClick={() => handleCancelUserDeletion(u.id)}
                                     disabled={updatingId === u.id}
                                     title="Admin: Cancel user deletion request"
-                                    className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-40"
+                                    className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-500/20 disabled:opacity-40 dark:text-emerald-400"
                                   >
                                     <HiOutlineXMark className="h-3.5 w-3.5" />
                                     Cancel
@@ -477,7 +477,7 @@ export default function UsersPage() {
                                     onClick={() => openSecretModal("delete", u)}
                                     disabled={isSelf || updatingId === u.id}
                                     title="Admin: Force immediate deletion (requires secret code)"
-                                    className="inline-flex items-center gap-1 rounded border border-red-500/40 bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-40"
+                                    className="inline-flex items-center gap-1 rounded border border-red-500/40 bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-600 transition-colors hover:bg-red-500/20 disabled:opacity-40 dark:text-red-400"
                                   >
                                     <HiOutlineTrash className="h-3.5 w-3.5" />
                                     Force Delete
@@ -492,7 +492,7 @@ export default function UsersPage() {
                                           onClick={() => handleEnableUser(u.id)}
                                           disabled={updatingId === u.id}
                                           title="Re-activate this account"
-                                          className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-40 cursor-pointer"
+                                          className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-500/20 disabled:opacity-40 cursor-pointer dark:text-emerald-400"
                                         >
                                           <HiOutlineShieldCheck className="h-3.5 w-3.5" />
                                         </button>
@@ -501,7 +501,7 @@ export default function UsersPage() {
                                           onClick={() => openSecretModal("disable", u)}
                                           disabled={updatingId === u.id}
                                           title="Disable this account (requires secret code)"
-                                          className="inline-flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 transition-colors hover:bg-amber-500/20 disabled:opacity-40 cursor-pointer"
+                                          className="inline-flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-500/20 disabled:opacity-40 cursor-pointer dark:text-amber-400"
                                         >
                                           <HiOutlineLockClosed className="h-3.5 w-3.5" />
                                         </button>
@@ -510,7 +510,7 @@ export default function UsersPage() {
                                         onClick={() => openSecretModal("delete", u)}
                                         disabled={updatingId === u.id}
                                         title="Permanently delete this account (requires secret code)"
-                                        className="inline-flex items-center gap-1 rounded border border-red-500/40 bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-40 cursor-pointer"
+                                        className="inline-flex items-center gap-1 rounded border border-red-500/40 bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-600 transition-colors hover:bg-red-500/20 disabled:opacity-40 cursor-pointer dark:text-red-400"
                                       >
                                         <HiOutlineTrash className="h-3.5 w-3.5" />
                                       </button>

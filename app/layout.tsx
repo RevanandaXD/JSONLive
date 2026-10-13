@@ -22,13 +22,29 @@ export const metadata: Metadata = {
     "Paste your JSON, save it, and get a public API endpoint instantly. No backend setup required.",
 };
 
+const themeScript = `
+  (function () {
+    try {
+      var stored = localStorage.getItem("jsonlive-theme");
+      var root = document.documentElement;
+      root.classList.remove("dark");
+      root.classList.remove("light");
+      root.classList.add(stored === "light" ? "light" : "dark");
+    } catch (e) {
+      document.documentElement.classList.add("dark");
+    }
+  })();
+`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${Poppinst.variable} ${JakartaSansPlus.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`dark ${Poppinst.variable} ${JakartaSansPlus.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Provider>{children}</Provider>
       </body>
     </html>

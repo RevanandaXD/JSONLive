@@ -288,7 +288,7 @@ export default function ResourcePage() {
       <div className="lg:pl-64 lg:pt-6">
         <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           {successMsg && (
-            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-400 shadow-lg backdrop-blur">
+            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700 shadow-lg backdrop-blur dark:text-emerald-400">
               <HiOutlineCheck className="h-5 w-5 shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -403,7 +403,7 @@ export default function ResourcePage() {
                                 onClick={() => openDeleteModal(r)}
                                 disabled={deleting && resourceToDelete?.id === r.id}
                                 title="Delete resource"
-                                className="inline-flex h-8 w-8 items-center justify-center rounded border border-red-500/40 bg-red-500/10 text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-40 cursor-pointer"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded border border-red-500/40 bg-red-500/10 text-red-600 transition-colors hover:bg-red-500/20 disabled:opacity-40 cursor-pointer dark:text-red-400"
                               >
                                 <HiOutlineTrash className="h-3.5 w-3.5" />
                               </button>
@@ -474,11 +474,11 @@ export default function ResourcePage() {
                 <div className="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/30 px-3 py-2">
                   <div className="flex items-center gap-2">
                     {touched && !parsed.ok ? (
-                      <span className="inline-flex items-center gap-1 rounded bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-400">
+                      <span className="inline-flex items-center gap-1 rounded bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:text-red-400">
                         Invalid JSON
                       </span>
                     ) : parsed.ok && data.trim() ? (
-                      <span className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
                         Valid JSON
                       </span>
                     ) : (
@@ -551,7 +551,7 @@ export default function ResourcePage() {
                   /{resourceToDelete.user?.username || resourceToDelete.user?.name || resourceToDelete.user?.email}/{resourceToDelete.slug}
                 </div>
               )}
-              <p className="text-xs text-red-400">
+              <p className="text-xs text-red-600 dark:text-red-400">
                 This action cannot be undone. All data in this endpoint will be permanently erased.
               </p>
             </div>

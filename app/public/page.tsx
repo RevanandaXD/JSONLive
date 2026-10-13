@@ -54,9 +54,6 @@ export default async function PublicPage() {
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               {rows.length} endpoints live
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded border border-border/60 bg-card/60 px-3.5 py-1.5 text-xs font-medium text-muted-foreground">
-              GET only · CORS open · no auth
-            </span>
           </div>
         </header>
 

@@ -202,7 +202,7 @@ export default function ResourceDetailPage() {
           </Button>
           <Button
             variant="outline"
-            className="text-muted-foreground hover:border-amber-500/40 hover:text-amber-400"
+            className="text-muted-foreground hover:border-amber-500/40 hover:text-amber-600 dark:hover:text-amber-400"
             onClick={() => toggle({ private: !data.private })}
           >
             {data.private ? (
@@ -214,7 +214,7 @@ export default function ResourceDetailPage() {
           </Button>
           <Button
             variant="outline"
-            className="text-red-500 hover:border-red-500/40 hover:text-red-400"
+            className="text-red-500 hover:border-red-500/40 hover:text-red-600 dark:hover:text-red-400"
             onClick={handleDelete}
           >
             <HiOutlineTrash className="h-4 w-4" />

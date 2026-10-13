@@ -140,7 +140,7 @@ export default function AdminPage() {
                 <span className="text-xs font-semibold uppercase tracking-wider">
                   Active Resources
                 </span>
-                <HiOutlineSquare3Stack3D className="h-5 w-5 text-emerald-400" />
+                <HiOutlineSquare3Stack3D className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <p className="mt-2 font-heading text-3xl font-bold text-foreground">
                 {totalResources}
@@ -157,7 +157,7 @@ export default function AdminPage() {
                 <span className="text-xs font-semibold uppercase tracking-wider">
                   Limit Capacity
                 </span>
-                <HiOutlineAdjustmentsHorizontal className="h-5 w-5 text-sky-400" />
+                <HiOutlineAdjustmentsHorizontal className="h-5 w-5 text-sky-600 dark:text-sky-400" />
               </div>
               <p className="mt-2 font-heading text-3xl font-bold text-foreground">
                 {totalLimitAllocated}
@@ -172,7 +172,7 @@ export default function AdminPage() {
                 <span className="text-xs font-semibold uppercase tracking-wider">
                   Admins
                 </span>
-                <HiOutlineShieldCheck className="h-5 w-5 text-purple-400" />
+                <HiOutlineShieldCheck className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <p className="mt-2 font-heading text-3xl font-bold text-foreground">
                 {adminCount}
@@ -184,15 +184,15 @@ export default function AdminPage() {
 
             <div className="rounded-md border border-red-500/30 bg-red-500/10 p-4">
               <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-xs font-semibold uppercase tracking-wider text-red-400">
+                <span className="text-xs font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">
                   Deletion Queue
                 </span>
-                <HiOutlineClock className="h-5 w-5 text-red-400" />
+                <HiOutlineClock className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
-              <p className="mt-2 font-heading text-3xl font-bold text-red-400">
+              <p className="mt-2 font-heading text-3xl font-bold text-red-600 dark:text-red-400">
                 {pendingDeletionCount}
               </p>
-              <p className="mt-1 text-xs text-red-300/80">
+              <p className="mt-1 text-xs text-red-500/80 dark:text-red-300/80">
                 Pending 3-day deletion
               </p>
             </div>

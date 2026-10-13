@@ -311,10 +311,10 @@ export default function SettingsPage() {
                 <div className="flex flex-col justify-between gap-4 px-5 py-5 sm:flex-row sm:items-center">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-red-400">
+                      <p className="text-sm font-semibold text-red-600 dark:text-red-400">
                         Account Deletion Pending (3-Day Queue)
                       </p>
-                      <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-300">
+                      <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-600 dark:text-red-300">
                         Queued
                       </span>
                     </div>
@@ -324,7 +324,7 @@ export default function SettingsPage() {
                         {new Date(pendingDeleteDate).toLocaleString()}
                       </span>
                       . Scheduled for permanent deletion on:{" "}
-                      <span className="font-mono font-bold text-red-400">
+                      <span className="font-mono font-bold text-red-600 dark:text-red-400">
                         {new Date(
                           new Date(pendingDeleteDate).getTime() + 3 * 24 * 60 * 60 * 1000
                         ).toLocaleString()}
@@ -339,7 +339,7 @@ export default function SettingsPage() {
                     variant="outline"
                     onClick={handleCancelDelete}
                     disabled={cancelling}
-                    className="shrink-0 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                    className="shrink-0 border-emerald-600/40 text-emerald-700 hover:bg-emerald-500/10 dark:border-emerald-500/40 dark:text-emerald-400"
                   >
                     {cancelling ? "Cancelling..." : "Cancel Deletion Request"}
                   </Button>

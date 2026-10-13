@@ -91,7 +91,7 @@ export const FormatJSON = ({
       placeholder={placeholder}
       spellCheck={false}
       className={`h-96 w-full resize-none bg-transparent p-5 font-mono text-sm leading-relaxed outline-none placeholder:text-muted-foreground/40 ${
-        invalid ? "text-red-300" : "text-foreground"
+        invalid ? "text-red-600 dark:text-red-300" : "text-foreground"
       } ${className}`}
     />
   );
