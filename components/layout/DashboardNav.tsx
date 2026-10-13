@@ -14,6 +14,7 @@ import {
 import { HiMenu, HiX } from "react-icons/hi";
 import { Logo } from "./Logo";
 import { ButtonLink } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { UseUIStore } from "@/stores/ui-store";
 import { useSession, signOut } from "@/src/lib/auth-client";
 
@@ -101,6 +102,8 @@ export const DashboardNav = ({
         <Logo href={isLoggedIn ? (user?.role === "admin" ? "/admin" : "/dashboard") : "/"} />
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
+
           {/* Logged-in: user dropdown */}
           {isLoggedIn && showUser ? (
             <div ref={menuRef} className="relative hidden sm:block">

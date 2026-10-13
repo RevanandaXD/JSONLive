@@ -18,7 +18,7 @@ export const Footer = () => {
               href="https://github.com/RevanandaXD"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-1 border p-1.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground w-fit"
+              className="mt-1 border py-1 px-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground w-fit"
               aria-label="GitHub"
             >
               <FiGithub className="w-3.5 h-3.5" />

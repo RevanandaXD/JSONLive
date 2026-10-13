@@ -6,8 +6,8 @@ export type AlertTone = "info" | "success" | "warning" | "danger";
 const tones: Record<AlertTone, string> = {
   info: "border-border bg-card/60 text-foreground",
   success: "border-primary/40 bg-primary/10 text-primary",
-  warning: "border-amber-500/30 bg-amber-500/10 text-amber-500",
-  danger: "border-red-500/30 bg-red-500/10 text-red-400",
+  warning: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-500",
+  danger: "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400",
 };
 
 export function Alert({

@@ -44,7 +44,7 @@ export const Hero = () => {
           </span>
 
           {/* Heading */}
-          <h1 className="mt-8 font-heading text-4xl font-medium leading-tight tracking-tight text-background sm:text-5xl lg:text-6xl">
+          <h1 className="mt-8 font-heading text-4xl font-semibold leading-tight tracking-tight text-background sm:text-5xl lg:text-6xl">
             Turn JSON into a usable API
           </h1>
 

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
 import { Logo } from "./Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useSession } from "@/src/lib/auth-client";
 
 const navLinks = [
-  { name: "Features", route: "#features" },
-  { name: "How It Works", route: "#how-it-works" },
+  { name: "Features", route: "/#features" },
+  { name: "How It Works", route: "/#how-it-works" },
   { name: "Docs API", route: "/docs" }
 ];
 
@@ -37,6 +38,7 @@ export const Navbar = () => {
                 {link.name}
               </a>
             ))}
+            <ThemeToggle className="ml-1" />
             <Link
               href="/login"
               className="ml-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-background hover:bg-primary-hover"
@@ -45,15 +47,19 @@ export const Navbar = () => {
             </Link>
           </div>
 
-          {/* Mobile Toggle */}
-          <button
-            className="flex cursor-pointer items-center justify-center rounded-lg bg-transparent p-2 text-foreground md:hidden"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Toggle menu"
-            aria-expanded={mobileOpen}
-          >
-            {mobileOpen ? <HiX className="h-5 w-5" /> : <HiMenu className="h-5 w-5" />}
-          </button>
+          {/* Mobile right actions */}
+          <div className="flex items-center gap-1 md:hidden">
+            <ThemeToggle />
+            {/* Mobile Toggle */}
+            <button
+              className="flex cursor-pointer items-center justify-center rounded-lg bg-transparent p-2 text-foreground"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? <HiX className="h-5 w-5" /> : <HiMenu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}

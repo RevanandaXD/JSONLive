@@ -30,7 +30,7 @@ const menuBtn =
 
 const statusStyles = {
   draft: { badge: "bg-muted/60 text-muted-foreground", dot: "bg-muted-foreground", label: "Draft" },
-  private: { badge: "bg-amber-500/10 text-amber-400", dot: "bg-amber-400", label: "Private" },
+  private: { badge: "bg-amber-500/10 text-amber-600 dark:text-amber-400", dot: "bg-amber-500 dark:bg-amber-400", label: "Private" },
   public: { badge: "bg-primary/10 text-primary", dot: "bg-primary", label: "Published" },
 } as const;
 
@@ -188,7 +188,7 @@ export function ResourceCard({
                   onDelete(r.id);
                   setMenuOpen(false);
                 }}
-                className={`${menuBtn} text-red-500 hover:bg-red-500/10 hover:text-red-400`}
+                className={`${menuBtn} text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400`}
               >
                 <HiOutlineTrash className="h-4 w-4" />
                 Delete

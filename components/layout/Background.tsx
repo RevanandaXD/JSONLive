@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { THEME_EVENT, getActiveTheme } from "@/src/lib/theme";
 
 const CELL = 8;
 const GAP = 1;
@@ -14,6 +15,17 @@ export function Background() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    let fill = getActiveTheme() === "light" ? "#fafafa" : "#000";
+
+    const syncFill = () => {
+      fill = getActiveTheme() === "light" ? "#fafafa" : "#000";
+      if (width > 0 && height > 0) {
+        ctx!.fillStyle = fill;
+        ctx!.fillRect(0, 0, width, height);
+      }
+    };
+    window.addEventListener(THEME_EVENT, syncFill);
 
     let width = 0;
     let height = 0;
@@ -73,7 +85,7 @@ export function Background() {
       const dt = now - lastTime;
       lastTime = now;
 
-      ctx!.fillStyle = "#000";
+      ctx!.fillStyle = fill;
       ctx!.fillRect(0, 0, width, height);
 
       spawnTimer += dt;
@@ -106,6 +118,7 @@ export function Background() {
 
     return () => {
       window.removeEventListener("resize", resize);
+      window.removeEventListener(THEME_EVENT, syncFill);
       cancelAnimationFrame(animId);
     };
   }, []);

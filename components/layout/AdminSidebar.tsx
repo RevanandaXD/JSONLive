@@ -12,6 +12,7 @@ import {
 import { HiMenu, HiX } from "react-icons/hi";
 import { Logo } from "./Logo";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { UseUIStore } from "@/stores/ui-store";
 import { useSession, signOut } from "@/src/lib/auth-client";
 
@@ -52,6 +53,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
           Admin
         </span>
+        <ThemeToggle className="ml-auto" />
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3">
@@ -141,18 +143,21 @@ export function AdminSidebar() {
       {/* Mobile top bar */}
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/60 bg-background/95 px-4 backdrop-blur lg:hidden">
         <Logo href="/admin" />
-        <button
-          onClick={toggleSidebar}
-          aria-label="Toggle menu"
-          aria-expanded={sidebarOpen}
-          className="flex items-center justify-center rounded-md p-2 text-foreground"
-        >
-          {sidebarOpen ? (
-            <HiX className="h-5 w-5" />
-          ) : (
-            <HiMenu className="h-5 w-5" />
-          )}
-        </button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <button
+            onClick={toggleSidebar}
+            aria-label="Toggle menu"
+            aria-expanded={sidebarOpen}
+            className="flex items-center justify-center rounded-md p-2 text-foreground"
+          >
+            {sidebarOpen ? (
+              <HiX className="h-5 w-5" />
+            ) : (
+              <HiMenu className="h-5 w-5" />
+            )}
+          </button>
+        </div>
       </header>
 
       {/* Mobile drawer */}

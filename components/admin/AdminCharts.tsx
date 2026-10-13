@@ -14,6 +14,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useTheme } from "@/hooks/useTheme";
+import type { Theme } from "@/src/lib/theme";
 
 export interface AdminChartUser {
   id: string;
@@ -26,16 +28,31 @@ export interface AdminChartUser {
   _count: { resources: number };
 }
 
-const CHART_COLORS = {
-  primary: "#22c55e",
-  sky: "#38bdf8",
-  violet: "#a78bfa",
-  amber: "#fbbf24",
-  red: "#ef4444",
-  muted: "#3f3f46",
-  grid: "#27272a",
-  label: "#a1a1aa",
-};
+function chartColors(theme: Theme) {
+  return theme === "light"
+    ? {
+        primary: "#16a34a",
+        sky: "#0284c7",
+        violet: "#7c3aed",
+        amber: "#d97706",
+        red: "#dc2626",
+        muted: "#d4d4d8",
+        grid: "#e4e4e7",
+        label: "#71717a",
+        cursor: "rgba(0,0,0,0.05)",
+      }
+    : {
+        primary: "#22c55e",
+        sky: "#38bdf8",
+        violet: "#a78bfa",
+        amber: "#fbbf24",
+        red: "#ef4444",
+        muted: "#3f3f46",
+        grid: "#27272a",
+        label: "#a1a1aa",
+        cursor: "rgba(255,255,255,0.04)",
+      };
+}
 
 function ChartCard({
   title,
@@ -98,6 +115,9 @@ function EmptyChart({ text }: { text: string }) {
 }
 
 export function AdminCharts({ users }: { users: AdminChartUser[] }) {
+  const { theme } = useTheme();
+  const CHART_COLORS = chartColors(theme);
+
   const totalUsers = users.length;
   const adminCount = users.filter((u) => u.role === "admin").length;
   const pendingDeletion = users.filter((u) => !!u.deleteRequestedAt).length;
@@ -273,7 +293,7 @@ export function AdminCharts({ users }: { users: AdminChartUser[] }) {
                 />
                 <Tooltip
                   content={<ChartTooltip />}
-                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                  cursor={{ fill: CHART_COLORS.cursor }}
                 />
                 <Bar
                   dataKey="resources"
