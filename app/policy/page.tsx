@@ -1,163 +1,197 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { FaArrowLeft } from "react-icons/fa";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
-import { Badge } from "@/components/ui/Badge";
-import { ButtonLink } from "@/components/ui/Button";
+import { LIMITS, MAX_API_KEYS, RATE_LIMIT } from "@/src/lib/config";
 
 export const metadata: Metadata = {
   title: "Policy & Acceptable Use | JSONLive",
   description:
-    "Acceptable use policy, operational limits, and privacy terms for JSONLive mock API service.",
+    "Acceptable use, limits, and privacy terms for the JSONLive mock API service.",
 };
 
-const policyItems = [
+type PolicySection = {
+  id: string;
+  title: string;
+  points: string[];
+};
+
+const SECTIONS: PolicySection[] = [
   {
-    number: "01",
-    tag: "Data Handling",
-    title: "Data Collection & Payload Privacy",
-    content: [
-      "JSONLive stores only minimal account identifiers and the JSON documents you submit to build endpoints.",
-      "Resources are public by default; you can mark a resource as private to require an API key. Even so, never store sensitive credentials, payment info, or production user records.",
+    id: "data",
+    title: "Data & Accounts",
+    points: [
+      "JSONLive stores your name, email address, and the JSON documents you publish.",
+      "Passwords are stored as hashes, never as plain text.",
+      "API keys are shown once at creation and stored only as a hash.",
+      "Do not store secrets, passwords, tokens, or real user data in a resource.",
     ],
   },
   {
-    number: "02",
-    tag: "Public Access",
-    title: "CORS & Public Endpoint Visibility",
-    content: [
-      "Endpoints automatically include open Access-Control-Allow-Origin headers so your web and mobile applications can perform fetch requests immediately.",
-      "Public resources can be read by anyone possessing the URL path; private resources require a valid API key. Maintain unique resource names to prevent unintended discoveries.",
+    id: "access",
+    title: "Public Access & CORS",
+    points: [
+      "Published resources can be read by anyone who has the URL.",
+      "Responses include Access-Control-Allow-Origin: * so any origin can fetch them.",
+      "Private resources require an API key owned by the resource owner.",
+      "Write requests (POST, PUT, PATCH, DELETE) always require an API key.",
     ],
   },
   {
-    number: "03",
-    tag: "Traffic Rules",
-    title: "Fair Use & Rate Limiting",
-    content: [
-      "Requests are throttled per client IP: up to 500 GET requests/minute and 100 write operations/minute to ensure host stability.",
-      "Automated stress testing, abusive scraping, or denial-of-service simulations are prohibited and will result in rate-limiting or IP restriction.",
+    id: "rate-limits",
+    title: "Rate Limits",
+    points: [
+      `GET requests are limited to ${RATE_LIMIT.GET.limit} per minute per IP address.`,
+      `Write requests are limited to ${RATE_LIMIT.WRITE.limit} per minute per IP address.`,
+      "When a limit is exceeded the API returns 429 with a Retry-After header.",
+      "Scraping, load testing, and denial-of-service attempts are not permitted.",
     ],
   },
   {
-    number: "04",
-    tag: "Capacity",
-    title: "Storage Quotas & JSON Limits",
-    content: [
-      "Each resource payload has a maximum size cap of 5 MB. Free tier accounts can create up to 5 resources simultaneously.",
-      "JSONLive is optimized for development, testing, and staging. Keep local copies of essential schemas and payloads.",
+    id: "storage",
+    title: "Storage Limits",
+    points: [
+      `Each resource may contain up to ${(LIMITS.MAX_JSON_SIZE / (1024 * 1024)).toFixed(0)} MB of JSON.`,
+      `An account may hold up to ${LIMITS.MAX_RESOURCES} resources.`,
+      `An account may hold up to ${MAX_API_KEYS} API keys.`,
+      "JSONLive is intended for development and testing. Keep your own backups.",
     ],
   },
   {
-    number: "05",
-    tag: "Service Lifecycle",
+    id: "security",
+    title: "Security",
+    points: [
+      "Traffic is served over HTTPS through a Cloudflare Tunnel.",
+      "PostgreSQL is not exposed to the internet.",
+      "Credentials are kept in environment variables.",
+      "Resources are scoped to their owner and request bodies are validated.",
+    ],
+  },
+  {
+    id: "acceptable-use",
+    title: "Acceptable Use",
+    points: [
+      "Do not upload illegal, harmful, or infringing content.",
+      "Do not distribute malware, phishing pages, or spam payloads.",
+      "Do not attempt to bypass authentication or access another account's resources.",
+      "Content that violates these rules may be removed and accounts suspended.",
+    ],
+  },
+  {
+    id: "availability",
     title: "Availability & Retention",
-    content: [
-      "This service is self-hosted and provided for development workflows. Uptime guarantees do not cover production-critical backends.",
-      "Inactive or orphan test resources may be pruned periodically to maintain optimal database performance.",
+    points: [
+      "The service is self-hosted and provided without an uptime guarantee.",
+      "It is not intended for production-critical systems.",
+      "Inactive or abandoned test resources may be deleted periodically.",
     ],
   },
   {
-    number: "06",
-    tag: "Security",
-    title: "Platform Integrity & Content Rules",
-    content: [
-      "Payloads promoting illegal activities, malicious code, malware delivery, or phishing are strictly prohibited and immediately purged.",
-      "Suspicious patterns and anomalies are monitored via reverse tunnel proxy safeguards.",
+    id: "deletion",
+    title: "Account Deletion",
+    points: [
+      "You can delete your account from Settings at any time.",
+      "Deleting an account removes its resources and API keys.",
+      "You can edit or delete any resource you own at any time.",
+    ],
+  },
+  {
+    id: "changes",
+    title: "Changes to This Policy",
+    points: [
+      "This policy may change as the project evolves.",
+      "Updates take effect when they are published on this page.",
     ],
   },
 ];
+
+function Points({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-2 text-sm leading-relaxed text-muted-foreground">
+      {items.map((point, idx) => (
+        <li key={idx} className="flex gap-2.5">
+          <span
+            aria-hidden
+            className="mt-2 h-1 w-1 shrink-0 rounded-full bg-muted-foreground/50"
+          />
+          <span>{point}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default function PolicyPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Navbar />
 
-      <main className="flex-1 px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mx-auto max-w-6xl">
-          {/* Header & Back Action */}
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <Badge tone="primary">POLICY & TERMS</Badge>
-                <span className="text-xs text-muted-foreground">Version 2.0</span>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-20 sm:py-28">
+        <Link
+          href="/"
+          className="group mb-6 inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
+        >
+          <FaArrowLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+          Back
+        </Link>
+
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+            Policy & Terms
+          </p>
+          <h1 className="mt-3 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Policy & Acceptable Use
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
+            How JSONLive stores data, secures endpoints, and what is expected
+            from users of the service.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground/70">Version 2.0</p>
+        </div>
+
+        <Alert tone="warning" title="Development & testing" className="mt-8 max-w-2xl">
+          JSONLive endpoints are public. Do not upload production secrets or
+          confidential data.
+        </Alert>
+
+        <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {SECTIONS.map((section) => (
+            <section
+              key={section.id}
+              id={section.id}
+              className="scroll-mt-24 rounded-lg border border-border/70 bg-card/40 p-5"
+            >
+              <h2 className="font-heading text-base font-semibold tracking-tight text-foreground">
+                {section.title}
+              </h2>
+              <div className="mt-3">
+                <Points items={section.points} />
               </div>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Policy & Usage Guidelines
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Rules, quotas, and service terms for creating and consuming JSONLive mock endpoints.
-              </p>
-            </div>
-            <div>
-              <ButtonLink href="/" variant="outline" size="sm">
-                Back to Home
-              </ButtonLink>
-            </div>
-          </div>
+            </section>
+          ))}
 
-          {/* Alert Notification */}
-          <Alert tone="warning" title="Development & Testing Disclaimer" className="mb-8">
-            JSONLive endpoints are publicly accessible across origins. Do not upload production secrets,
-            passwords, or confidential private databases.
-          </Alert>
-
-          {/* Grid Layout of Policy Items */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {policyItems.map((item) => (
-              <Card key={item.number} className="h-full">
-                <CardHeader
-                  title={item.title}
-                  description={
-                    <span className="flex items-center justify-between font-mono text-xs text-muted-foreground/80">
-                      <span>{item.tag}</span>
-                      <span className="font-semibold text-primary">{item.number}</span>
-                    </span>
-                  }
-                />
-                <CardBody className="p-5">
-                  <ul className="space-y-3 text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                    {item.content.map((paragraph, idx) => (
-                      <li key={idx} className="border-l-2 border-border/80 pl-3">
-                        {paragraph}
-                      </li>
-                    ))}
-                  </ul>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-
-          {/* Support / Contact Footer Card */}
-          <div className="mt-8">
-            <Card>
-              <CardBody className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
-                <div>
-                  <h3 className="text-base font-semibold text-foreground">
-                    Questions or Abuse Reporting?
-                  </h3>
-                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    If you detect misuse or require support regarding these terms, reach out through GitHub or our community channels.
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <ButtonLink href="/thanks" variant="secondary" size="sm">
-                    Special Thanks
-                  </ButtonLink>
-                  <ButtonLink
-                    href="https://github.com/RevanandaXD"
-                    variant="primary"
-                    size="sm"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    GitHub Project
-                  </ButtonLink>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
+          <section
+            id="contact"
+            className="scroll-mt-24 rounded-lg border border-border/70 bg-card/40 p-5 md:col-span-2 lg:col-span-3"
+          >
+            <h2 className="font-heading text-base font-semibold tracking-tight text-foreground">
+              Contact
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              For questions or to report abuse, reach out through the{" "}
+              <a
+                href="https://github.com/RevanandaXD"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                GitHub project
+              </a>
+              .
+            </p>
+          </section>
         </div>
       </main>
 
