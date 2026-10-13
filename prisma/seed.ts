@@ -50,6 +50,18 @@ async function main() {
   for (const userData of USERS) {
     const passwordHash = await hashPassword(userData.password);
 
+    const existingUser = await prisma.user.findUnique({
+      where: { email: userData.email }
+    })
+
+    const usernameOwner = await prisma.user.findUnique({
+      where: { username: userData.username }
+    })
+
+    if (usernameOwner && usernameOwner.id !== existingUser?.id) throw new Error(
+      `Username ${userData.username} already exists`
+    )
+
     const user = await prisma.user.upsert({
       where: { email: userData.email },
       update: {
