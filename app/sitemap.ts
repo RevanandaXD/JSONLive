@@ -7,7 +7,7 @@ type Route = {
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseURL = process.env.NEXT_PUBLIC_SITE_URL || "https://jsonlive.revandev.my.id"
+    const baseURL = process.env.NEXT_PUBLIC_APP_URL || "https://jsonlive.revandev.my.id"
 
     const routes: Route[] = [
         { path: '', changeFrequency: 'daily', priority: 1.0 },
