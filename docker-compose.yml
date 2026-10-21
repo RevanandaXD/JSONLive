@@ -9,6 +9,8 @@ services:
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
       ADMIN_ACTION_SECRET: ${ADMIN_ACTION_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
