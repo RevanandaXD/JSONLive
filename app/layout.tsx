@@ -43,6 +43,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`dark ${Poppinst.variable} ${JakartaSansPlus.variable} h-full antialiased`}
     >
+      <head>
+        <meta name="google-site-verification" content="7a7CaksyYk68RZUKIr4pbJpmfZedqChwMMoGifDthhw" />
+      </head>
       <body className="min-h-full flex flex-col">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Provider>{children}</Provider>
