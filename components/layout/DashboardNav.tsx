@@ -201,9 +201,13 @@ export const DashboardNav = ({
 
           {/* Mobile toggle */}
           <button
-            className="flex cursor-pointer items-center justify-center rounded-md bg-transparent p-2 text-foreground md:hidden"
+            className={`flex cursor-pointer items-center justify-center transition-colors md:hidden ${
+              sidebarOpen
+                ? "h-9 w-9 bg-foreground text-background"
+                : "h-9 w-9 text-foreground hover:bg-muted"
+            }`}
             onClick={() => toggleSidebar()}
-            aria-label="Toggle menu"
+            aria-label={sidebarOpen ? "Close menu" : "Open menu"}
             aria-expanded={sidebarOpen}
           >
             {sidebarOpen ? (
@@ -217,13 +221,8 @@ export const DashboardNav = ({
 
       {/* Mobile menu */}
       {sidebarOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
-            onClick={() => closeSidebar()}
-          />
-          <div className="relative z-40 border-t border-border/60 bg-background md:hidden">
-            <div className="flex flex-col gap-3 px-4 py-4 sm:px-6">
+        <div className="absolute inset-x-0 top-full z-40 border-b border-border/60 bg-background shadow-xl md:hidden">
+          <div className="flex flex-col gap-3 px-4 py-4 sm:px-6">
               {isPending ? (
                 <div className="h-4 w-24 animate-pulse rounded bg-muted/60" />
               ) : isLoggedIn && showUser ? (
@@ -307,7 +306,6 @@ export const DashboardNav = ({
               )}
             </div>
           </div>
-        </>
       )}
     </header>
   );

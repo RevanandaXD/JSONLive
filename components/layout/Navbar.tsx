@@ -52,9 +52,13 @@ export const Navbar = () => {
             <ThemeToggle />
             {/* Mobile Toggle */}
             <button
-              className="flex cursor-pointer items-center justify-center rounded-lg bg-transparent p-2 text-foreground"
+              className={`flex cursor-pointer items-center justify-center transition-colors ${
+                mobileOpen
+                  ? "h-9 w-9 bg-foreground text-background"
+                  : "h-9 w-9 text-foreground hover:bg-muted"
+              }`}
               onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Toggle menu"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
             >
               {mobileOpen ? <HiX className="h-5 w-5" /> : <HiMenu className="h-5 w-5" />}
@@ -64,7 +68,7 @@ export const Navbar = () => {
 
         {/* Mobile Menu */}
         {mobileOpen && (
-          <div className="border-t border-border md:hidden">
+          <div className="absolute inset-x-0 top-full z-40 border-b border-border bg-background shadow-xl md:hidden">
             <div className="flex flex-col gap-1 px-6 py-4">
               {navLinks.map((link) => (
                 <a
