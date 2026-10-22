@@ -1,11 +1,22 @@
-export const HOST = "https://jsonlive.example";
+export const HOST = "https://jsonlive.revandev.my.id";
+export const BASE_URL = `${HOST}/api`;
+export const API_KEY_PREFIX = "jlv_";
 
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS";
+export type HttpMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "DELETE"
+  | "OPTIONS";
+
+export type EndpointAuth = "none" | "key";
 
 export type Endpoint = {
   method: HttpMethod;
   path: string;
   desc: string;
+  auth: EndpointAuth;
   status: string;
 };
 
@@ -23,44 +34,68 @@ export type DocExample = {
   response: string;
 };
 
+export type BehaviorNote = {
+  title: string;
+  body: string;
+};
+
 export const SAMPLE_DATA = `[
   { "id": 1, "name": "Revan", "role": "Developer" },
   { "id": 2, "name": "Budi", "role": "Designer" }
 ]`;
 
-export const CONSUME_EXAMPLE = `// Any framework works — this is plain fetch, no SDK needed.
+export const CONSUME_EXAMPLE = `// Read the whole collection (no key needed)
 const res = await fetch("${HOST}/api/revan/users");
-
-if (!res.ok) {
-  throw new Error("Request failed: " + res.status);
-}
-
 const users = await res.json();
-console.log(users);`;
+
+// Add an item (needs API key)
+await fetch("${HOST}/api/revan/users", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": "${API_KEY_PREFIX}...",
+  },
+  body: JSON.stringify({ name: "Siti", role: "QA" }),
+});`;
+
+export const AUTH_EXAMPLES = [
+  {
+    label: "Custom header",
+    code: `x-api-key: ${API_KEY_PREFIX}...`,
+  },
+  {
+    label: "Bearer token",
+    code: `Authorization: Bearer ${API_KEY_PREFIX}...`,
+  },
+];
 
 export const COLLECTION_ENDPOINTS: Endpoint[] = [
   {
     method: "GET",
-    path: "/api/:username/:resource",
-    desc: "Read the resource. Objects are returned as-is, arrays return every item.",
+    path: "/api/{owner}/{resource}",
+    desc: "Read the whole collection.",
+    auth: "none",
     status: "200 / 401 / 404",
   },
   {
     method: "POST",
-    path: "/api/:username/:resource",
-    desc: "Append an item to an array resource. Generates an id when the body omits one.",
+    path: "/api/{owner}/{resource}",
+    desc: "Append one item to the collection.",
+    auth: "key",
     status: "201 / 400 / 401",
   },
   {
     method: "PUT",
-    path: "/api/:username/:resource",
-    desc: "Replace the whole collection with the array sent in the body.",
+    path: "/api/{owner}/{resource}",
+    desc: "Replace the whole collection.",
+    auth: "key",
     status: "200 / 400 / 401",
   },
   {
     method: "OPTIONS",
-    path: "/api/:username/:resource",
+    path: "/api/{owner}/{resource}",
     desc: "CORS preflight for browser clients.",
+    auth: "none",
     status: "204",
   },
 ];
@@ -68,32 +103,37 @@ export const COLLECTION_ENDPOINTS: Endpoint[] = [
 export const ITEM_ENDPOINTS: Endpoint[] = [
   {
     method: "GET",
-    path: "/api/:username/:resource/:id",
-    desc: "Read one item by its id field.",
-    status: "200 / 400 / 404",
-  },
-  {
-    method: "PUT",
-    path: "/api/:username/:resource/:id",
-    desc: "Replace one item. Fields absent from the body are removed.",
+    path: "/api/{owner}/{resource}/{id}",
+    desc: "Read one item.",
+    auth: "none",
     status: "200 / 400 / 404",
   },
   {
     method: "PATCH",
-    path: "/api/:username/:resource/:id",
-    desc: "Merge fields into one item. Only the sent keys change.",
-    status: "200 / 400 / 404",
+    path: "/api/{owner}/{resource}/{id}",
+    desc: "Update selected fields.",
+    auth: "key",
+    status: "200 / 400 / 401 / 404",
+  },
+  {
+    method: "PUT",
+    path: "/api/{owner}/{resource}/{id}",
+    desc: "Replace the whole item.",
+    auth: "key",
+    status: "200 / 400 / 401 / 404",
   },
   {
     method: "DELETE",
-    path: "/api/:username/:resource/:id",
-    desc: "Remove one item from the collection.",
-    status: "200 / 400 / 404",
+    path: "/api/{owner}/{resource}/{id}",
+    desc: "Delete the item.",
+    auth: "key",
+    status: "200 / 400 / 401 / 404",
   },
   {
     method: "OPTIONS",
-    path: "/api/:username/:resource/:id",
+    path: "/api/{owner}/{resource}/{id}",
     desc: "CORS preflight for browser clients.",
+    auth: "none",
     status: "204",
   },
 ];
@@ -104,7 +144,8 @@ export const EXAMPLES: DocExample[] = [
     title: "Read the whole collection",
     method: "GET",
     path: `${HOST}/api/revan/users`,
-    summary: "No key needed. Anyone can call this URL and gets the full array back.",
+    summary:
+      "No key needed. Anyone can call this URL and gets the full array back.",
     curl: `curl ${HOST}/api/revan/users`,
     js: `const res = await fetch("${HOST}/api/revan/users");
 const users = await res.json();`,
@@ -137,18 +178,19 @@ const user = await res.json();`,
     note: "Needs an API key. Get one in Settings, then send it as x-api-key.",
     curl: `curl -X POST ${HOST}/api/revan/users \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: jlv_..." \\
+  -H "x-api-key: ${API_KEY_PREFIX}..." \\
   -d '{ "name": "Siti", "role": "QA" }'`,
     js: `const res = await fetch("${HOST}/api/revan/users", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "x-api-key": "jlv_...",
+    "x-api-key": "${API_KEY_PREFIX}...",
   },
   body: JSON.stringify({ name: "Siti", role: "QA" }),
 });
 
-const created = await res.json(); // 201, includes the generated id`,
+// 201 — the response body contains the generated id
+const created = await res.json();`,
     status: "201 Created",
     response: `{ "id": 3, "name": "Siti", "role": "QA" }`,
   },
@@ -162,13 +204,13 @@ const created = await res.json(); // 201, includes the generated id`,
     note: "Needs an API key.",
     curl: `curl -X PATCH ${HOST}/api/revan/users/1 \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: jlv_..." \\
+  -H "x-api-key: ${API_KEY_PREFIX}..." \\
   -d '{ "role": "Senior Developer" }'`,
     js: `await fetch("${HOST}/api/revan/users/1", {
   method: "PATCH",
   headers: {
     "Content-Type": "application/json",
-    "x-api-key": "jlv_...",
+    "x-api-key": "${API_KEY_PREFIX}...",
   },
   body: JSON.stringify({ role: "Senior Developer" }),
 });`,
@@ -185,13 +227,13 @@ const created = await res.json(); // 201, includes the generated id`,
     note: "Needs an API key.",
     curl: `curl -X PUT ${HOST}/api/revan/users/1 \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: jlv_..." \\
+  -H "x-api-key: ${API_KEY_PREFIX}..." \\
   -d '{ "id": 1, "name": "Revan" }'`,
     js: `await fetch("${HOST}/api/revan/users/1", {
   method: "PUT",
   headers: {
     "Content-Type": "application/json",
-    "x-api-key": "jlv_...",
+    "x-api-key": "${API_KEY_PREFIX}...",
   },
   body: JSON.stringify({ id: 1, name: "Revan" }),
 });`,
@@ -204,16 +246,18 @@ const created = await res.json(); // 201, includes the generated id`,
     title: "Delete an item",
     method: "DELETE",
     path: `${HOST}/api/revan/users/1`,
-    summary: "The entry is removed from the array. A fresh GET confirms it is gone.",
+    summary:
+      "The entry is removed from the array. A fresh GET confirms it is gone.",
     note: "Needs an API key.",
     curl: `curl -X DELETE ${HOST}/api/revan/users/1 \\
-  -H "x-api-key: jlv_..."`,
+  -H "x-api-key: ${API_KEY_PREFIX}..."`,
     js: `const res = await fetch("${HOST}/api/revan/users/1", {
   method: "DELETE",
-  headers: { "x-api-key": "jlv_..." },
+  headers: { "x-api-key": "${API_KEY_PREFIX}..." },
 });
 
-const result = await res.json(); // { "success": true }`,
+// 200 — { "success": true }
+const result = await res.json();`,
     status: "200 OK",
     response: `{ "success": true }`,
   },
@@ -227,7 +271,7 @@ const result = await res.json(); // { "success": true }`,
     note: "Needs an API key.",
     curl: `curl -X PUT ${HOST}/api/revan/users \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: jlv_..." \\
+  -H "x-api-key: ${API_KEY_PREFIX}..." \\
   -d '[
     { "id": 1, "name": "Revan", "role": "Developer" },
     { "id": 2, "name": "Budi", "role": "Designer" }
@@ -236,7 +280,7 @@ const result = await res.json(); // { "success": true }`,
   method: "PUT",
   headers: {
     "Content-Type": "application/json",
-    "x-api-key": "jlv_...",
+    "x-api-key": "${API_KEY_PREFIX}...",
   },
   body: JSON.stringify([
     { id: 1, name: "Revan", role: "Developer" },
@@ -251,30 +295,42 @@ const result = await res.json(); // { "success": true }`,
   },
 ];
 
-export const BEHAVIOR_NOTES = [
-  "Only published resources are reachable. Unpublished ones answer with 404.",
-  "A private resource only serves GET to its owner session. Public data needs no login at all.",
-  "Item routes (:id) require an array resource whose entries carry an id field.",
-  "POST and PUT on a collection require an array body; POST and PUT on an item require an object body.",
-  "POST generates the next numeric id, or a UUID when the collection has no numeric ids.",
-  "Every public response ships Access-Control-Allow-Origin: * so browsers can call it from any origin.",
+export const BEHAVIOR_NOTES: BehaviorNote[] = [
+  {
+    title: "IDs are automatic",
+    body: "If a posted object has no id field, one is generated for you. Item routes (/{id}) match against the id field inside the JSON, not the array position.",
+  },
+  {
+    title: "PATCH merges, PUT replaces",
+    body: "PATCH updates only the fields you send; PUT on an item replaces the entire object, dropping any fields you omit.",
+  },
+  {
+    title: "Resources are public by default",
+    body: "Anyone with the URL can read a resource. Mark a resource as private from the dashboard to require an API key for reads too.",
+  },
+  {
+    title: "Validation happens on write",
+    body: "Only valid JSON is stored. Invalid payloads are rejected with 400 Bad Request before anything is saved.",
+  },
+  {
+    title: "CORS is open",
+    body: "Endpoints can be called directly from browsers, mobile apps, and CI/CD pipelines with no proxy needed.",
+  },
 ];
 
 export const STATUS_CODES = [
-  { code: "200 OK", desc: "Request succeeded." },
-  { code: "201 Created", desc: "POST created a new item." },
+  { code: "200 OK", desc: "Successful read, update, or delete." },
+  { code: "201 Created", desc: "Item appended via POST." },
   { code: "204 No Content", desc: "OPTIONS preflight succeeded." },
+  { code: "400 Bad Request", desc: "Invalid JSON body or malformed request." },
+  { code: "401 Unauthorized", desc: "Missing or invalid API key on a write." },
+  { code: "404 Not Found", desc: "Unknown resource, owner, or item id." },
   {
-    code: "400 Bad Request",
-    desc: "Malformed JSON, or a body shape the route does not accept.",
+    code: "413 Payload Too Large",
+    desc: "JSON exceeds the per-resource size limit.",
   },
-  {
-    code: "401 Unauthorized",
-    desc: "Write request without a valid API key, or GET on a private resource.",
-  },
-  { code: "404 Not Found", desc: "Unknown username, resource, or item id." },
   {
     code: "429 Too Many Requests",
-    desc: "Rate limit reached. See the Retry-After header.",
+    desc: "Rate limit exceeded; retry after the Retry-After header.",
   },
 ];

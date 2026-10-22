@@ -7,12 +7,13 @@ import {
   HiOutlineCheckBadge,
   HiOutlineEnvelope,
   HiOutlineUser,
-  HiLockClosed
+  HiLockClosed,
 } from "react-icons/hi2";
 import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Turnstile } from "@/components/ui/Turnstile";
 import { Field, PasswordInput, TextInput } from "@/components/ui/Input";
 import { signIn, signUp } from "@/src/lib/auth-client";
 
@@ -28,6 +29,8 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
+
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
     const handlePageShow = () => {
@@ -75,6 +78,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!turnstileToken) {
+      setError("Please complete the bot verification.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -85,11 +93,20 @@ export default function RegisterPage() {
         name: username,
         username,
         callbackURL: "/dashboard",
+        fetchOptions: {
+          body: {
+            turnstileToken,
+          },
+        },
       });
 
       if (resError) {
         setError(resError.message || "Registration failed");
         setLoading(false);
+        setTurnstileToken(null)
+        if (typeof window !== 'undefined' && window.turnstile) {
+          window.turnstile.reset()
+        }
         return;
       }
 
@@ -114,7 +131,9 @@ export default function RegisterPage() {
         <h1 className="font-heading text-xl font-bold text-foreground">
           Create your account
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">Get started for free.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Get started for free.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -158,6 +177,12 @@ export default function RegisterPage() {
 
         {error && <Alert tone="danger">{error}</Alert>}
 
+        <Turnstile
+          onSuccess={(token) => setTurnstileToken(token)}
+          onExpire={() => setTurnstileToken(null)}
+          onError={() => setTurnstileToken(null)}
+        />
+
         <Button
           type="submit"
           variant="primary"
@@ -178,11 +203,13 @@ export default function RegisterPage() {
           type="button"
           variant="outline"
           onClick={handleAuthGoogle}
-          disabled={loading || loadingGoogle}
+          disabled={loading || loadingGoogle || !turnstileToken}
           className="w-full flex items-center justify-center gap-2.5 cursor-pointer py-2.5 border-border/80 hover:bg-muted/80 transition-all font-medium"
         >
           <FcGoogle className="h-4 w-4 shrink-0 text-base" />
-          <span>{loadingGoogle ? "Connecting to Google..." : "Continue with Google"}</span>
+          <span>
+            {loadingGoogle ? "Connecting to Google..." : "Continue with Google"}
+          </span>
         </Button>
       </form>
 
