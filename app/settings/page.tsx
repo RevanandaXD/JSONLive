@@ -89,13 +89,13 @@ export default function SettingsPage() {
     Email: user?.email,
   };
 
-  if (!user && !sessionPending) return null;
-
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setConfirmInput("");
     setDeleteError(null);
   }, []);
+
+  if (!user && !sessionPending) return null;
 
   const handleCreateKey = async () => {
     if (!keyName.trim()) return;
