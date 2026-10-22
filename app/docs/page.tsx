@@ -1,23 +1,28 @@
 import type { Metadata } from "next";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
+import { HiOutlineExclamationTriangle } from "react-icons/hi2";
 import { DashboardNav } from "@/components/layout/DashboardNav";
-import { MethodBadge } from "@/components/ui/Badge";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { Tabs } from "@/components/ui/Tabs";
+import { CodeTabs } from "@/components/ui/CodeTabs";
 import { LIMITS, MAX_API_KEYS, RATE_LIMIT } from "@/src/lib/config";
 import {
+  AUTH_EXAMPLES,
+  BASE_URL,
   BEHAVIOR_NOTES,
   COLLECTION_ENDPOINTS,
   CONSUME_EXAMPLE,
   EXAMPLES,
-  HOST,
   ITEM_ENDPOINTS,
   SAMPLE_DATA,
   STATUS_CODES,
   type Endpoint,
 } from "@/src/lib/docs";
-import DocsSidebar from "@/components/layout/DocsSidebar";
+import {
+  DocsSectionNav,
+  DocsSidebar,
+  type DocsNavGroup,
+} from "@/components/layout/DocsSidebar";
 
 export const metadata: Metadata = {
   title: "API Reference | JSONLive",
@@ -25,7 +30,7 @@ export const metadata: Metadata = {
     "REST API reference for JSONLive resources — read, create, replace, update, and delete JSON over plain HTTP.",
 };
 
-const SIDEBAR_LINKS = [
+const SIDEBAR_GROUPS: DocsNavGroup[] = [
   {
     group: "Getting Started",
     items: [
@@ -69,24 +74,56 @@ const LIMITS_LIST = [
   { label: "API keys per user", value: `${MAX_API_KEYS}` },
 ];
 
+const METHOD_COLOR: Record<string, string> = {
+  GET: "text-emerald-500",
+  POST: "text-sky-500",
+  PUT: "text-amber-500",
+  PATCH: "text-violet-500",
+  DELETE: "text-red-500",
+  OPTIONS: "text-muted-foreground",
+};
+
+function MethodTag({ method }: { method: string }) {
+  return (
+    <span
+      className={`font-mono text-[11px] font-bold tracking-wide ${
+        METHOD_COLOR[method] ?? "text-muted-foreground"
+      }`}
+    >
+      {method}
+    </span>
+  );
+}
+
 function Section({
   id,
+  index,
   title,
+  lead,
   children,
 }: {
   id: string;
+  index: string;
   title: string;
+  lead?: string;
   children: ReactNode;
 }) {
   return (
-    <section
-      id={id}
-      className="scroll-mt-24 border-t border-border/40 pt-8 first:border-0 first:pt-0"
-    >
-      <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-        {title}
-      </h2>
-      <div className="mt-4">{children}</div>
+    <section id={id} className="scroll-mt-24 border-t border-border/40 pt-10">
+      <div className="flex items-baseline gap-3">
+        <span className="font-mono text-xs text-primary/70">{index}</span>
+        <h2 className="font-heading text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          {title}
+        </h2>
+      </div>
+
+      {lead && (
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          {lead}
+        </p>
+      )}
+
+      <div className="mt-6">{children}</div>
     </section>
   );
 }
@@ -94,8 +131,8 @@ function Section({
 function CodeBlock({ code, muted = false }: { code: string; muted?: boolean }) {
   return (
     <pre
-      className={`overflow-x-auto p-3.5 font-mono text-xs leading-relaxed sm:text-[13px] ${
-        muted ? "text-muted-foreground" : "text-foreground"
+      className={`overflow-x-auto px-4 py-3.5 font-mono text-xs leading-relaxed sm:text-[13px] ${
+        muted ? "text-muted-foreground" : "text-foreground/90"
       }`}
     >
       <code>{code}</code>
@@ -105,12 +142,13 @@ function CodeBlock({ code, muted = false }: { code: string; muted?: boolean }) {
 
 function CodePanel({ code }: { code: string }) {
   return (
-    <div className="relative">
-      <div className="flex justify-end border-b border-border/40 bg-muted/20 px-3 py-1.5">
+    <div className="bg-muted/25">
+      <div className="flex items-center justify-end border-b border-border/40 px-3 py-1.5">
         <CopyButton
           value={code}
           ariaLabel="Copy code"
-          className="h-6 px-2 text-[11px]"
+          variant="ghost"
+          className="h-6 px-1.5 text-[11px]"
         />
       </div>
       <CodeBlock code={code} />
@@ -118,43 +156,64 @@ function CodePanel({ code }: { code: string }) {
   );
 }
 
-function Panel({ children }: { children: ReactNode }) {
+function RouteTable({ items }: { items: Endpoint[] }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border/70 bg-card/40">
-      {children}
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[620px] border-collapse">
+        <thead>
+          <tr className="border-b border-border/60 text-left">
+            <th className="py-2.5 pr-5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+              Method
+            </th>
+            <th className="py-2.5 pr-5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+              Route
+            </th>
+            <th className="py-2.5 pr-5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+              Auth
+            </th>
+            <th className="py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+              Description
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((endpoint) => (
+            <tr
+              key={`${endpoint.method}-${endpoint.path}`}
+              className="border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20"
+            >
+              <td className="py-3.5 pr-5 align-top">
+                <MethodTag method={endpoint.method} />
+              </td>
+              <td className="py-3.5 pr-5 align-top">
+                <code className="font-mono text-xs text-foreground">
+                  {endpoint.path}
+                </code>
+              </td>
+              <td className="py-3.5 pr-5 align-top">
+                {endpoint.auth === "key" ? (
+                  <span className="font-mono text-[11px] text-amber-500">
+                    Key
+                  </span>
+                ) : (
+                  <span className="font-mono text-[11px] text-muted-foreground/50">
+                    —
+                  </span>
+                )}
+              </td>
+              <td className="py-3.5 align-top">
+                <p className="text-[13px] text-muted-foreground">
+                  {endpoint.desc}
+                </p>
+                <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/50">
+                  {endpoint.status}
+                </p>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-  );
-}
-
-function EndpointList({ items }: { items: Endpoint[] }) {
-  return (
-    <Panel>
-      {items.map((endpoint, i) => (
-        <div
-          key={`${endpoint.method}-${endpoint.path}`}
-          className={`flex flex-col gap-2 p-4 transition-colors hover:bg-muted/10 sm:flex-row sm:items-start sm:gap-4 ${
-            i === items.length - 1 ? "" : "border-b border-border/50"
-          }`}
-        >
-          <div className="shrink-0 pt-0.5">
-            <MethodBadge method={endpoint.method} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-baseline gap-2">
-              <code className="font-mono text-xs font-semibold text-foreground sm:text-sm">
-                {endpoint.path}
-              </code>
-              <span className="font-mono text-[11px] text-muted-foreground/60">
-                {endpoint.status}
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-              {endpoint.desc}
-            </p>
-          </div>
-        </div>
-      ))}
-    </Panel>
   );
 }
 
@@ -163,34 +222,48 @@ export default function DocsPage() {
     <div className="min-h-screen bg-background text-foreground">
       <DashboardNav />
 
-      <div className="mx-auto flex max-w-6xl items-start gap-10 px-4 py-8 sm:px-6">
-        <aside className="sticky top-20 hidden w-52 shrink-0 py-2 md:block">
-          <DocsSidebar props={SIDEBAR_LINKS}/>
+      {/* Mobile section switcher */}
+      <div className="sticky top-16 z-30 border-b border-border/50 bg-background/95 px-4 backdrop-blur sm:px-6 md:hidden">
+        <DocsSectionNav groups={SIDEBAR_GROUPS} />
+      </div>
+
+      <div className="mx-auto flex w-full max-w-6xl gap-10 px-4 sm:px-6">
+        <aside className="sticky top-24 hidden h-[calc(100vh-7rem)] w-56 shrink-0 overflow-y-auto py-12 md:block">
+          <DocsSidebar groups={SIDEBAR_GROUPS} />
         </aside>
 
-        <main className="min-w-0 flex-1 space-y-10">
+        <main className="min-w-0 flex-1 space-y-12 py-12">
           <header id="overview" className="scroll-mt-24">
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
               API Reference
+            </p>
+            <h1 className="mt-3 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              Turn JSON into a live HTTP API
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               Every published resource generates an instant HTTP endpoint. Read
               operations require no authentication and have open CORS, while
               write mutations are secured with your API key.
             </p>
 
-            <div className="mt-6 rounded-lg border border-border/70 bg-card/40 p-4">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Base URL
-              </span>
-              <div className="mt-2 flex items-center justify-between rounded border border-border/60 bg-background/50 px-3 py-2 font-mono text-xs sm:text-sm">
-                <span>{HOST}/api</span>
+            <div className="mt-8 border-y border-border/40">
+              <div className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+                    Base URL
+                  </p>
+                  <p className="mt-1 break-all font-mono text-sm text-foreground">
+                    {BASE_URL}
+                  </p>
+                </div>
                 <CopyButton
-                  value={`${HOST}/api`}
-                  className="h-6 px-2 text-xs"
+                  value={BASE_URL}
+                  ariaLabel="Copy base URL"
+                  variant="ghost"
+                  className="h-8 self-start px-2 text-xs sm:self-auto"
                 />
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="pb-4 text-xs text-muted-foreground">
                 All routes accept and return JSON (
                 <code className="font-mono text-foreground">
                   application/json
@@ -201,145 +274,164 @@ export default function DocsPage() {
           </header>
 
           {/* Authentication */}
-          <Section id="authentication" title="Authentication">
-            <Panel>
-              <div className="divide-y divide-border/50 p-4 text-xs text-muted-foreground sm:text-sm">
-                <div className="pb-3">
-                  <p className="font-semibold text-foreground">Read (GET)</p>
-                  <p className="mt-1">
-                    No authentication or headers needed. Browsers can query
-                    endpoints directly from any origin.
-                  </p>
-                </div>
-                <div className="pt-3">
-                  <p className="font-semibold text-foreground">
-                    Write (POST, PUT, PATCH, DELETE)
-                  </p>
-                  <p className="mt-1">
-                    Requires an API key sent in the header:
-                  </p>
-                  <code className="mt-2 block w-fit rounded border border-border/60 bg-background/60 px-2.5 py-1 font-mono text-xs text-foreground">
-                    x-api-key: jlv_...
-                  </code>
-                  <p className="mt-2 text-xs">
-                    You can manage your keys in{" "}
-                    <Link
-                      href="/settings"
-                      className="text-primary hover:underline"
-                    >
-                      Account Settings
-                    </Link>
-                    .
-                  </p>
-                </div>
+          <Section
+            id="authentication"
+            index="01"
+            title="Authentication"
+            lead="Reads (GET) are public and need no authentication. All write operations (POST, PUT, PATCH, DELETE) require an API key."
+          >
+            <div className="grid gap-8 md:grid-cols-2">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+                  Read (GET)
+                </p>
+                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+                  No authentication or headers needed. Browsers can query
+                  endpoints directly from any origin.
+                </p>
               </div>
-            </Panel>
+
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+                  Write (POST, PUT, PATCH, DELETE)
+                </p>
+                <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+                  Send a key with every write request, using either header form.
+                  Requests without a valid key return{" "}
+                  <code className="font-mono text-foreground">
+                    401 Unauthorized
+                  </code>
+                  .
+                </p>
+
+                <div className="mt-3 divide-y divide-border/25 border-y border-border/25">
+                  {AUTH_EXAMPLES.map((example) => (
+                    <div
+                      key={example.label}
+                      className="flex items-center justify-between gap-3 py-2"
+                    >
+                      <code className="font-mono text-xs text-foreground">
+                        {example.code}
+                      </code>
+                      <span className="shrink-0 text-[11px] text-muted-foreground/60">
+                        {example.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="mt-3 text-[13px] text-muted-foreground">
+                  Get a key in{" "}
+                  <Link
+                    href="/settings"
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    Account Settings
+                  </Link>
+                  .
+                </p>
+              </div>
+            </div>
           </Section>
 
           {/* Quickstart */}
-          <Section id="quickstart" title="Quickstart">
-            <p className="mb-3 text-xs text-muted-foreground sm:text-sm">
-              Use standard{" "}
-              <code className="font-mono text-foreground">fetch</code> in any
-              browser or JavaScript runtime:
-            </p>
-            <Panel>
-              <CodePanel code={CONSUME_EXAMPLE} />
-            </Panel>
+          <Section
+            id="quickstart"
+            index="02"
+            title="Quickstart"
+            lead="Use standard fetch in any browser or JavaScript runtime:"
+          >
+            <CodePanel code={CONSUME_EXAMPLE} />
           </Section>
 
           {/* Collection Routes */}
-          <Section id="collection-routes" title="Collection Routes">
-            <p className="mb-3 text-xs text-muted-foreground sm:text-sm">
-              Endpoints that operate on the whole resource dataset:
-            </p>
-            <EndpointList items={COLLECTION_ENDPOINTS} />
+          <Section
+            id="collection-routes"
+            index="03"
+            title="Collection Routes"
+            lead="Endpoints that operate on the whole resource dataset."
+          >
+            <RouteTable items={COLLECTION_ENDPOINTS} />
           </Section>
 
           {/* Item Routes */}
-          <Section id="item-routes" title="Item Routes">
-            <p className="mb-3 text-xs text-muted-foreground sm:text-sm">
-              Endpoints targeting a specific item in an array resource by its{" "}
-              <code className="font-mono text-foreground">id</code>:
-            </p>
-            <EndpointList items={ITEM_ENDPOINTS} />
+          <Section
+            id="item-routes"
+            index="04"
+            title="Item Routes"
+            lead="Endpoints targeting a specific item in an array resource by its id."
+          >
+            <RouteTable items={ITEM_ENDPOINTS} />
           </Section>
 
           {/* Sample Data */}
-          <Section id="starter-data" title="Sample Dataset">
-            <p className="mb-3 text-xs text-muted-foreground sm:text-sm">
-              The CRUD examples below use a resource named{" "}
-              <code className="font-mono text-foreground">users</code> owned by{" "}
-              <code className="font-mono text-foreground">revan</code>:
-            </p>
-            <Panel>
-              <CodePanel code={SAMPLE_DATA} />
-            </Panel>
+          <Section
+            id="starter-data"
+            index="05"
+            title="Sample Dataset"
+            lead="The CRUD examples below use a resource named users owned by revan."
+          >
+            <CodePanel code={SAMPLE_DATA} />
           </Section>
 
           {/* CRUD Tutorial */}
-          <Section id="examples" title="CRUD Operations">
-            <p className="mb-4 text-xs text-muted-foreground sm:text-sm">
-              Follow these operations sequentially to explore how data updates
-              over HTTP:
-            </p>
-
-            <div className="space-y-4">
+          <Section
+            id="examples"
+            index="06"
+            title="CRUD Operations"
+            lead="Follow these operations sequentially to explore how data updates over HTTP."
+          >
+            <div className="divide-y divide-border/30 border-y border-border/30">
               {EXAMPLES.map((example) => (
-                <article
-                  key={example.step}
-                  className="overflow-hidden rounded-lg border border-border/70 bg-card/40"
-                >
-                  <div className="border-b border-border/50 p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/10 font-mono text-xs font-semibold text-primary">
-                        {example.step}
-                      </span>
-                      <h3 className="text-sm font-semibold text-foreground">
-                        {example.title}
-                      </h3>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {example.summary}
-                    </p>
-
-                    <div className="mt-3 flex items-center gap-2">
-                      <MethodBadge method={example.method} />
-                      <code className="min-w-0 font-mono text-xs text-foreground">
-                        {example.path}
-                      </code>
-                    </div>
-
-                    {example.note && (
-                      <p className="mt-2 text-xs text-primary">
-                        {example.note}
-                      </p>
-                    )}
+                <article key={example.step} className="py-6 first:pt-6">
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-mono text-xs text-primary/70">
+                      {example.step.padStart(2, "0")}
+                    </span>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {example.title}
+                    </h3>
                   </div>
 
-                  <Tabs
-                    items={[
-                      {
-                        value: "curl",
-                        label: "cURL",
-                        content: <CodePanel code={example.curl} />,
-                      },
-                      {
-                        value: "js",
-                        label: "JavaScript",
-                        content: <CodePanel code={example.js} />,
-                      },
-                    ]}
-                  />
+                  <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
+                    {example.summary}
+                  </p>
 
-                  <div className="border-t border-border/50 bg-muted/10 p-3">
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <MethodTag method={example.method} />
+                    <code className="min-w-0 break-all font-mono text-xs text-foreground">
+                      {example.path}
+                    </code>
+                  </div>
+
+                  {example.note && (
+                    <p className="mt-3 flex items-start gap-2 text-xs text-amber-500">
+                      <HiOutlineExclamationTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      {example.note}
+                    </p>
+                  )}
+
+                  <div className="mt-4">
+                    <CodeTabs
+                      items={[
+                        { value: "curl", label: "cURL", code: example.curl },
+                        {
+                          value: "js",
+                          label: "JavaScript",
+                          code: example.js,
+                        },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="mt-4">
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                       <span>Response</span>
                       <span className="font-mono font-medium text-foreground">
                         {example.status}
                       </span>
                     </div>
-                    <div className="mt-1 overflow-hidden rounded border border-border/50 bg-background/50">
+                    <div className="mt-1.5 bg-muted/25">
                       <CodeBlock code={example.response} muted />
                     </div>
                     {example.result && (
@@ -354,34 +446,52 @@ export default function DocsPage() {
           </Section>
 
           {/* Behavior Notes */}
-          <Section id="notes" title="Behavior Notes">
-            <Panel>
-              <ul className="divide-y divide-border/50 text-xs text-muted-foreground sm:text-sm">
-                {BEHAVIOR_NOTES.map((note, idx) => (
-                  <li key={idx} className="p-3.5 leading-relaxed">
-                    {note}
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          </Section>
-
-          {/* Limits */}
-          <Section id="limits" title="Limits & Quotas">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {LIMITS_LIST.map((limit) => (
+          <Section
+            id="notes"
+            index="07"
+            title="Behavior Notes"
+            lead="The rules that decide how JSONLive stores and returns your data."
+          >
+            <div className="divide-y divide-border/25 border-y border-border/25">
+              {BEHAVIOR_NOTES.map((note) => (
                 <div
-                  key={limit.label}
-                  className="rounded-lg border border-border/70 bg-card/40 p-4"
+                  key={note.title}
+                  className="grid gap-1 py-4 sm:grid-cols-[200px_1fr] sm:gap-8"
                 >
-                  <p className="text-xs text-muted-foreground">{limit.label}</p>
-                  <p className="mt-1 font-mono text-sm font-semibold text-foreground">
-                    {limit.value}
+                  <p className="text-[13px] font-medium text-foreground">
+                    {note.title}
+                  </p>
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">
+                    {note.body}
                   </p>
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">
+          </Section>
+
+          {/* Limits */}
+          <Section
+            id="limits"
+            index="08"
+            title="Limits & Quotas"
+            lead="Fair-use limits that keep the endpoint fast and stable."
+          >
+            <div className="grid gap-x-10 sm:grid-cols-2">
+              {LIMITS_LIST.map((limit) => (
+                <div
+                  key={limit.label}
+                  className="flex items-baseline justify-between gap-4 border-b border-border/25 py-3"
+                >
+                  <span className="text-[13px] text-muted-foreground">
+                    {limit.label}
+                  </span>
+                  <span className="font-mono text-xs font-semibold text-foreground">
+                    {limit.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-[13px] text-muted-foreground">
               Exceeded rate limits return HTTP{" "}
               <code className="font-mono text-foreground">
                 429 Too Many Requests
@@ -393,26 +503,27 @@ export default function DocsPage() {
           </Section>
 
           {/* Status Codes */}
-          <Section id="status-codes" title="Status Codes">
-            <Panel>
-              {STATUS_CODES.map((status, i) => (
+          <Section
+            id="status-codes"
+            index="09"
+            title="Status Codes"
+            lead="Every response code the API can return."
+          >
+            <div className="border-y border-border/25">
+              {STATUS_CODES.map((status) => (
                 <div
                   key={status.code}
-                  className={`flex flex-col gap-1 p-3.5 sm:flex-row sm:items-center sm:gap-6 ${
-                    i === STATUS_CODES.length - 1
-                      ? ""
-                      : "border-b border-border/50"
-                  }`}
+                  className="flex flex-col gap-1 border-b border-border/25 py-3 last:border-0 sm:flex-row sm:items-center sm:gap-8"
                 >
-                  <code className="w-40 shrink-0 font-mono text-xs font-semibold text-foreground">
+                  <code className="w-44 shrink-0 font-mono text-xs font-semibold text-foreground">
                     {status.code}
                   </code>
-                  <span className="text-xs text-muted-foreground sm:text-sm">
+                  <span className="text-[13px] text-muted-foreground">
                     {status.desc}
                   </span>
                 </div>
               ))}
-            </Panel>
+            </div>
           </Section>
         </main>
       </div>
