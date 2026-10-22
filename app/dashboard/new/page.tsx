@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HiOutlineArrowLeft, HiOutlineSparkles } from "react-icons/hi2";
-import { HiCheck, HiX } from "react-icons/hi";
+import { HiX } from "react-icons/hi";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";

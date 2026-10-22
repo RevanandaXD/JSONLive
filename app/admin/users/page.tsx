@@ -113,36 +113,6 @@ export default function UsersPage() {
     }
   };
 
-  const handleToggleRole = async (userId: string, currentRole: string) => {
-    if (userId === currentUser?.id) {
-      alert("You cannot change your own admin role.");
-      return;
-    }
-    const newRole = currentRole === "admin" ? "user" : "admin";
-    if (!confirm(`Are you sure you want to change this user's role to ${newRole.toUpperCase()}?`)) {
-      return;
-    }
-
-    setUpdatingId(userId);
-    try {
-      const res = await fetch("/api/admin/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, role: newRole }),
-      });
-      if (res.ok) {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, role: newRole as "admin" | "user" } : u))
-        );
-        showNotification(`Role updated to ${newRole}.`);
-      }
-    } catch (err) {
-      console.error("Failed to update role:", err);
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
   const handleCancelUserDeletion = async (userId: string) => {
     setUpdatingId(userId);
     try {
