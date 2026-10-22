@@ -46,8 +46,14 @@ export default function SettingsPage() {
   const { data, isPending: sessionPending } = useSession();
   const user = data?.user;
 
-  const { data: keys, isPending, createKey, isCreating, deleteKey, isDeleting } =
-    useApiKeys();
+  const {
+    data: keys,
+    isPending,
+    createKey,
+    isCreating,
+    deleteKey,
+    isDeleting,
+  } = useApiKeys();
 
   const [keyName, setKeyName] = useState("");
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
@@ -59,21 +65,31 @@ export default function SettingsPage() {
   const [cancelling, setCancelling] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Read deleteRequestedAt from session user if available
-  const userDeleteRequestedAt = (user as { deleteRequestedAt?: string | Date | null })?.deleteRequestedAt;
-  const [pendingDeleteDate, setPendingDeleteDate] = useState<string | Date | null>(userDeleteRequestedAt || null);
+  const userDeleteRequestedAt = (
+    user as { deleteRequestedAt?: string | Date | null }
+  )?.deleteRequestedAt;
+  const [pendingDeleteDate, setPendingDeleteDate] = useState<
+    string | Date | null
+  >(userDeleteRequestedAt || null);
 
-  // Sync state if user prop changes
   useEffect(() => {
     if (userDeleteRequestedAt === undefined) return;
-    void Promise.resolve().then(() => setPendingDeleteDate(userDeleteRequestedAt));
+    void Promise.resolve().then(() =>
+      setPendingDeleteDate(userDeleteRequestedAt),
+    );
   }, [userDeleteRequestedAt]);
+
+  useEffect(() => {
+    if (!user && !sessionPending) router.push("/login");
+  }, [user, sessionPending, router]);
 
   const profile = {
     Name: user?.name,
     Username: user?.username,
     Email: user?.email,
   };
+
+  if (!user && !sessionPending) return null;
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
@@ -127,7 +143,9 @@ export default function SettingsPage() {
         return;
       }
 
-      setPendingDeleteDate(payload?.deleteRequestedAt || new Date().toISOString());
+      setPendingDeleteDate(
+        payload?.deleteRequestedAt || new Date().toISOString(),
+      );
       closeModal();
       router.refresh();
     } catch {
@@ -153,11 +171,6 @@ export default function SettingsPage() {
       setCancelling(false);
     }
   };
-
-  if (!user && !sessionPending) {
-    router.push("/login");
-    return null;
-  }
 
   return (
     <div className="min-h-screen">
@@ -326,13 +339,15 @@ export default function SettingsPage() {
                       . Scheduled for permanent deletion on:{" "}
                       <span className="font-mono font-bold text-red-600 dark:text-red-400">
                         {new Date(
-                          new Date(pendingDeleteDate).getTime() + 3 * 24 * 60 * 60 * 1000
+                          new Date(pendingDeleteDate).getTime() +
+                            3 * 24 * 60 * 60 * 1000,
                         ).toLocaleString()}
                       </span>
                       .
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      You or an administrator can cancel this request at any time before deletion.
+                      You or an administrator can cancel this request at any
+                      time before deletion.
                     </p>
                   </div>
                   <Button
@@ -351,8 +366,9 @@ export default function SettingsPage() {
                       Delete account
                     </p>
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      Puts your account in a 3-day deletion queue. After 3 days, your profile,
-                      resources, and public endpoints will be permanently deleted.
+                      Puts your account in a 3-day deletion queue. After 3 days,
+                      your profile, resources, and public endpoints will be
+                      permanently deleted.
                     </p>
                   </div>
                   <Button
@@ -375,7 +391,11 @@ export default function SettingsPage() {
         title="Request account deletion?"
         footer={
           <>
-            <Button variant="secondary" onClick={closeModal} disabled={deleting}>
+            <Button
+              variant="secondary"
+              onClick={closeModal}
+              disabled={deleting}
+            >
               Cancel
             </Button>
             <Button
@@ -391,13 +411,16 @@ export default function SettingsPage() {
         }
       >
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Your account will enter a <strong className="text-foreground">3-day deletion queue</strong>.
-          After 3 days, all your data, resources, and public API endpoints will be permanently removed.
+          Your account will enter a{" "}
+          <strong className="text-foreground">3-day deletion queue</strong>.
+          After 3 days, all your data, resources, and public API endpoints will
+          be permanently removed.
         </p>
 
         <div className="mt-4">
           <Alert tone="warning">
-            You or an admin can cancel this request at any time during the 3-day wait period.
+            You or an admin can cancel this request at any time during the 3-day
+            wait period.
           </Alert>
         </div>
 
