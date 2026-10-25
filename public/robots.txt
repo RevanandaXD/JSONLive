@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /api/
+Allow: /
+Sitemap: https://jsonlive.revandev.my.id/sitemap.xml
