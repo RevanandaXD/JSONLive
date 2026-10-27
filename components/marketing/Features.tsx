@@ -44,7 +44,7 @@ const features: Feature[] = [
   {
     title: "Great For Learning",
     description:
-      "Designed to help people learning about rest API",
+      "Designed to help people learning about REST APIs",
     icon: FaBookReader,
   },
   {

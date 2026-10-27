@@ -49,9 +49,11 @@ export const Hero = () => {
           </h1>
 
           {/* Subtext */}
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-background/80">
-            Paste your JSON and get a live API endpoint instantly. Think of it
-            as json-server, hosted and public, with no install or setup.
+          <p className="mt-6 max-w-3xl text-md leading-relaxed text-background/80">
+            JSONLive is a free web tool that turns pasted JSON data into a live,
+            ready-to-use API endpoint, without building a backend. Paste your
+            JSON, save it, and fetch it from any frontend, mobile app, or CLI. It
+            is built for testing, prototyping, and frontend development.
           </p>
 
           {/* CTAs */}

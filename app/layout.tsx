@@ -17,23 +17,15 @@ const JakartaSansPlus = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "JSONLive — Turn JSON into a Usable API | jsonlive.revandev.my.id",
+  metadataBase: new URL("https://jsonlive.revandev.my.id"),
+  title: "JSONLive — Turn JSON into a Usable API",
   description:
-    "Paste your JSON, save it, and get a public API endpoint instantly. No backend setup required.",
-  keywords: [
-    "JSON",
-    "mock API",
-    "public API",
-    "JSONLive",
-    "frontend development",
-    "API mock",
-    "no backend",
-    "web development",
-  ],
+    "Paste your JSON and get a live API endpoint instantly. No backend, no install, no setup.",
+  alternates: { canonical: "/" },
   openGraph: {
     title: "JSONLive — Turn JSON into a Usable API",
     description:
-      "Paste your JSON, save it, and get a public API endpoint instantly. No backend setup required.",
+      "Paste your JSON and get a live API endpoint instantly.",
     url: "https://jsonlive.revandev.my.id",
     siteName: "JSONLive",
     images: [
@@ -44,31 +36,60 @@ export const metadata: Metadata = {
         alt: "JSONLive",
       },
     ],
-    locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "JSONLive — Turn JSON into a Usable API",
     description:
-      "Paste your JSON, save it, and get a public API endpoint instantly. No backend setup required.",
+      "Paste your JSON and get a live API endpoint instantly.",
     images: ["/og-image.png"],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-video-preview": -1,
-      "max-snippet": -1,
+  robots: { index: true, follow: true },
+  verification: { google: "7a7CaksyYk68RZUKIr4pbJpmfZedqChwMMoGifDthhw" },
+};
+
+const webAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "JSONLive",
+  url: "https://jsonlive.revandev.my.id",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any",
+  description:
+    "JSONLive turns pasted JSON data into a live, ready-to-use API endpoint without building a backend.",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What is JSONLive?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "JSONLive is a free web tool that turns pasted JSON data into a live, ready-to-use API endpoint without building a backend. It is built for testing, prototyping, and frontend development.",
+      },
     },
-  },
-  viewport: "width=device-width,initial-scale=1",
-  alternates: {
-    canonical: "https://jsonlive.revandev.my.id",
-  },
+    {
+      "@type": "Question",
+      name: "Do I need a backend to use JSONLive?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "No. JSONLive hosts the API for you. You only need to provide your JSON data.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What are the limits of JSONLive?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Each resource can be up to 5 MB of JSON, with 500 reads per minute and 100 writes per minute. Public reads are open, while writes require an API key.",
+      },
+    },
+  ],
 };
 
 const themeScript = `
@@ -93,32 +114,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`dark ${Poppinst.variable} ${JakartaSansPlus.variable} h-full antialiased`}
     >
       <head>
-        <meta
-          name="google-site-verification"
-          content="7a7CaksyYk68RZUKIr4pbJpmfZedqChwMMoGifDthhw"
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppJsonLd) }}
         />
-        <link rel="canonical" href="https://jsonlive.revandev.my.id" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Provider>{children}</Provider>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              url: "https://jsonlive.revandev.my.id",
-              name: "JSONLive",
-              potentialAction: {
-                "@type": "SearchAction",
-                target:
-                  "https://jsonlive.revandev.my.id/search?q={search_term_string}",
-                "query-input": "required name=search_term_string",
-              },
-            }),
-          }}
-        />
       </body>
     </html>
   );
