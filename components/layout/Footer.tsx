@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FiGithub, FiArrowUpRight } from "react-icons/fi";
+import { FiGithub, FiLinkedin, FiInstagram, FiArrowUpRight } from "react-icons/fi";
 import { Logo } from "./Logo";
 
 export const Footer = () => {
@@ -14,16 +14,35 @@ export const Footer = () => {
               The simplest way to turn JSON into a usable API. Paste, save, and
               get a public endpoint.
             </p>
-            <a
+            <div className="flex gap-2">
+              <a
               href="https://github.com/RevanandaXD"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-1 border py-1 px-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground w-fit"
+              className="mt-1 border p-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground w-fit"
               aria-label="GitHub"
             >
-              <FiGithub className="w-3.5 h-3.5" />
-              Support Me
+              <FiGithub className="w-4 h-4" />
             </a>
+            <a
+              href="https://www.linkedin.com/in/revananda-islami-pasha-367422350"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 border p-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground w-fit"
+              aria-label="GitHub"
+            >
+              <FiLinkedin className="w-4 h-4" />
+            </a>
+            <a
+              href="hhttps://www.instagram.com/revananda2006"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 border p-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground w-fit"
+              aria-label="GitHub"
+            >
+              <FiInstagram className="w-4 h-4" />
+            </a>
+            </div>
           </div>
 
           {/* Navigate */}
