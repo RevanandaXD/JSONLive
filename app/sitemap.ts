@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const base = "https://jsonlive.revandev.my.id";
 
 export default function sitemap(): MetadataRoute.Sitemap {
