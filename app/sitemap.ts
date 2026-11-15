@@ -21,18 +21,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date("2026-10-01"),
       changeFrequency: "monthly",
       priority: 0.3,
-    },
-    {
-      url: `${base}/login`,
-      lastModified: new Date("2026-11-02"),
-      changeFrequency: "yearly",
-      priority: 0.4,
-    },
-    {
-      url: `${base}/register`,
-      lastModified: new Date("2026-11-02"),
-      changeFrequency: "yearly",
-      priority: 0.4,
-    },
+    }
   ];
 }
